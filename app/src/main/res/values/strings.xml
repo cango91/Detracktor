@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ShareUntracked</string>
+    <string name="widget_description">Clean URLs by removing tracking parameters</string>
+</resources>

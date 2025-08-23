@@ -1,0 +1,25 @@
+{
+  "removeAllParams": false,
+  "rules": [
+    {
+      "hostPattern": "*.twitter.com",
+      "params": ["t", "si"]
+    },
+    {
+      "hostPattern": "*.x.com",
+      "params": ["t", "si"]
+    },
+    {
+      "hostPattern": "*.facebook.com",
+      "params": ["fbclid", "fb_*"]
+    },
+    {
+      "hostPattern": "*.youtube.com",
+      "params": ["si", "feature"]
+    },
+    {
+      "hostPattern": "*",
+      "params": ["utm_*", "gclid", "msclkid", "mc_*"]
+    }
+  ]
+}

@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ShareUntracked"
+rootProject.name = "Detracktor"
 include(":app")
  

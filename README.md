@@ -1,4 +1,4 @@
-# ShareUntracked
+# Detracktor
 
 A tiny Android app that cleans URLs by removing tracking parameters on demand.
 
@@ -27,9 +27,9 @@ When using custom rules mode, the app includes default rules for:
 
 ## How to Use
 
-1. **Share Menu**: Share any URL to ShareUntracked from another app
+1. **Share Menu**: Share any URL to Detracktor from another app
 2. **Quick Settings**: Add the "Clean URL" tile to your Quick Settings panel
-3. **Home Widget**: Add the ShareUntracked widget to your home screen
+3. **Home Widget**: Add the Detracktor widget to your home screen
 4. **Manual**: Open the app and tap "Clean Clipboard URL"
 
 ## Configuration
@@ -59,4 +59,21 @@ The APK will be generated at `app/build/outputs/apk/debug/app-debug.apk`
 
 ## Privacy
 
-ShareUntracked operates entirely offline with no network access, data collection, or analytics. All processing happens locally on your device.
+Detracktor operates entirely offline with no network access, data collection, or analytics. All processing happens locally on your device.
+
+## Acknowledgments
+
+Inspired by and named in homage to the [macOS Detracktor macro](https://monvelasquez.com/articles/2021-09/detracktor) by [Raymond Velasquez](https://github.com/rvelasq). This Android implementation brings similar functionality to mobile devices.
+
+Special thanks to the privacy-focused developer community working to make the web cleaner and more private. Stay sovereign!
+
+## Legal Notice
+
+Detracktor is an independent open-source project for URL cleaning/tracking parameter removal.
+
+**Not affiliated with:**
+- Detrack® (logistics tracking software by Detrack Systems Pte. Ltd.)  
+- Any commercial tracking, logistics, or delivery management services
+- Any signal blocking or faraday cage products
+
+This software serves a completely different function (URL sanitization) for a different market (privacy-focused individuals) than any existing trademarks, to the best of the author's knowledge, at the time of creation.

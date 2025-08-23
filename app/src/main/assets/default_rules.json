@@ -1,25 +1,85 @@
 {
+  "version": 2,
   "removeAllParams": false,
   "rules": [
     {
+      "hostPattern": "*.youtube.com",
+      "params": ["si", "feature", "t", "list", "index"],
+      "priority": "SUBDOMAIN_WILDCARD",
+      "patternType": "WILDCARD",
+      "enabled": true,
+      "description": "YouTube tracking and navigation parameters"
+    },
+    {
       "hostPattern": "*.twitter.com",
-      "params": ["t", "si"]
+      "params": ["s", "t", "ref_src", "ref_url"],
+      "priority": "SUBDOMAIN_WILDCARD",
+      "patternType": "WILDCARD",
+      "enabled": true,
+      "description": "Twitter/X tracking parameters"
     },
     {
       "hostPattern": "*.x.com",
-      "params": ["t", "si"]
+      "params": ["s", "t", "ref_src", "ref_url"],
+      "priority": "SUBDOMAIN_WILDCARD",
+      "patternType": "WILDCARD",
+      "enabled": true,
+      "description": "X (formerly Twitter) tracking parameters"
     },
     {
       "hostPattern": "*.facebook.com",
-      "params": ["fbclid", "fb_*"]
+      "params": ["fbclid", "ref", "source"],
+      "priority": "SUBDOMAIN_WILDCARD",
+      "patternType": "WILDCARD",
+      "enabled": true,
+      "description": "Facebook tracking parameters"
     },
     {
-      "hostPattern": "*.youtube.com",
-      "params": ["si", "feature"]
+      "hostPattern": "*.instagram.com",
+      "params": ["igshid", "utm_*"],
+      "priority": "SUBDOMAIN_WILDCARD",
+      "patternType": "WILDCARD",
+      "enabled": true,
+      "description": "Instagram tracking parameters"
+    },
+    {
+      "hostPattern": "*.amazon.com",
+      "params": ["ref", "ref_", "tag", "linkCode", "camp", "creative", "creativeASIN"],
+      "priority": "SUBDOMAIN_WILDCARD",
+      "patternType": "WILDCARD",
+      "enabled": true,
+      "description": "Amazon affiliate and tracking parameters"
+    },
+    {
+      "hostPattern": "*.google.com",
+      "params": ["gclid", "gclsrc", "dclid", "utm_*"],
+      "priority": "SUBDOMAIN_WILDCARD",
+      "patternType": "WILDCARD",
+      "enabled": true,
+      "description": "Google Ads and tracking parameters"
     },
     {
       "hostPattern": "*",
-      "params": ["utm_*", "gclid", "msclkid", "mc_*"]
+      "params": ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "msclkid", "_ga", "_gl"],
+      "priority": "GLOBAL_WILDCARD",
+      "patternType": "WILDCARD",
+      "enabled": true,
+      "description": "Common tracking parameters across all sites"
     }
-  ]
+  ],
+  "hostNormalization": {
+    "enableCaseNormalization": true,
+    "enablePortNormalization": true,
+    "enableIDNConversion": true,
+    "defaultPorts": {
+      "http": 80,
+      "https": 443,
+      "ftp": 21
+    }
+  },
+  "performance": {
+    "enablePatternCaching": true,
+    "maxCacheSize": 1000,
+    "recompileOnConfigChange": true
+  }
 }

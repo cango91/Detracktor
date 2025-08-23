@@ -1,6 +1,6 @@
-# Testing Guide for ShareUntracked
+# Testing Guide for Detracktor
 
-This document describes the testing approach and setup for the ShareUntracked Android application.
+This document describes the testing approach and setup for the Detracktor Android application.
 
 ## Overview
 

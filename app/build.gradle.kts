@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.shareuntracked"
+    namespace = "com.gologlu.detracktor"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.shareuntracked"
+        applicationId = "com.gologlu.detracktor"
         minSdk = 29
         targetSdk = 36
         versionCode = 1
@@ -30,12 +30,17 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Enable desugaring for newer Java features
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
     }
     buildFeatures {
         compose = true
+    }
+    lint {
+        baseline = file("lint-baseline.xml")
     }
 }
 
@@ -54,8 +59,18 @@ dependencies {
     implementation(libs.gson)  // JSON parsing
     implementation(libs.androidx.preference.ktx)  // Settings
     
+    // Enhanced URL cleaning dependencies
+    implementation("com.ibm.icu:icu4j:72.1")  // IDN and internationalization support
+    implementation("org.apache.commons:commons-lang3:3.12.0")  // Enhanced regex and pattern matching
+    // Using Android's built-in LruCache instead of Caffeine for Android compatibility
+    
+    // Core library desugaring for compatibility
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
+    testImplementation("org.mockito:mockito-inline:5.2.0")  // Enhanced mocking for new functionality
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")  // JUnit 5 for advanced testing
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.junit)

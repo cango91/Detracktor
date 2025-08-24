@@ -42,17 +42,7 @@ jobs:
     - name: Run unit tests
       run: ./gradlew test --continue
 
-    - name: Generate coverage report
-      run: ./gradlew jacocoTestReport
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
 
     - name: Run lint
       run: ./gradlew lint
@@ -163,6 +153,19 @@ jobs:
         emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
         disable-animations: true
         script: ./gradlew connectedAndroidTest
+
+    - name: Generate coverage report
+      run: ./gradlew createDebugCoverageReport
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./app/build/reports/coverage/androidTest/debug/connected/report.xml
+        flags: instrumented-tests
+        name: codecov-instrumented-${{ matrix.api-level }}
+        fail_ci_if_error: false
+        verbose: true
 
     - name: Upload instrumented test results
       uses: actions/upload-artifact@v4

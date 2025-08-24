@@ -41,16 +41,30 @@ class UrlCleanerService(private val context: Context) {
      * Clean URL from clipboard and copy back if changed
      */
     fun cleanClipboardUrl(): CleaningResult {
+        Log.d(TAG, "cleanClipboardUrl: Starting clipboard access")
+        
         val clipData = clipboardManager.primaryClip
+        Log.d(TAG, "cleanClipboardUrl: clipData = $clipData, itemCount = ${clipData?.itemCount}")
+        
         if (clipData == null || clipData.itemCount == 0) {
+            Log.d(TAG, "cleanClipboardUrl: Clipboard is empty or null")
             return CleaningResult.CLIPBOARD_EMPTY
         }
         
         val clipText = clipData.getItemAt(0).text?.toString()
-        if (clipText.isNullOrEmpty() || !isValidHttpUrl(clipText)) {
+        Log.d(TAG, "cleanClipboardUrl: clipText = '$clipText'")
+        
+        if (clipText.isNullOrEmpty()) {
+            Log.d(TAG, "cleanClipboardUrl: Clip text is null or empty")
             return CleaningResult.CLIPBOARD_EMPTY
         }
         
+        if (!isValidHttpUrl(clipText)) {
+            Log.d(TAG, "cleanClipboardUrl: Not a valid HTTP URL")
+            return CleaningResult.NOT_A_URL
+        }
+        
+        Log.d(TAG, "cleanClipboardUrl: Processing valid URL")
         return cleanAndCopyUrl(clipText)
     }
     
@@ -253,6 +267,7 @@ class UrlCleanerService(private val context: Context) {
     private fun showToast(result: CleaningResult, originalUrl: String? = null) {
         val message = when (result) {
             CleaningResult.CLIPBOARD_EMPTY -> "Clipboard empty"
+            CleaningResult.NOT_A_URL -> "Not a URL"
             CleaningResult.NO_CHANGE -> "No change"
             CleaningResult.CLEANED_AND_COPIED -> "Cleaned → copied"
         }
@@ -315,5 +330,62 @@ class UrlCleanerService(private val context: Context) {
         val originalParams = originalUri.queryParameterNames
         val cleanedParams = cleanedUri.queryParameterNames
         return originalParams.subtract(cleanedParams).toList()
+    }
+    
+    /**
+     * Analyze clipboard content for preview in UI
+     */
+    fun analyzeClipboardContent(): ClipboardAnalysis? {
+        val clipData = clipboardManager.primaryClip
+        if (clipData == null || clipData.itemCount == 0) {
+            return null
+        }
+        
+        val clipText = clipData.getItemAt(0).text?.toString()
+        if (clipText.isNullOrEmpty()) {
+            return null
+        }
+        
+        if (!isValidHttpUrl(clipText)) {
+            return ClipboardAnalysis(
+                originalUrl = clipText,
+                cleanedUrl = clipText,
+                isValidUrl = false,
+                hasChanges = false,
+                parametersToRemove = emptyList(),
+                parametersToKeep = emptyList(),
+                matchingRule = null
+            )
+        }
+        
+        val cleanedUrl = cleanUrl(clipText)
+        val originalUri = Uri.parse(clipText)
+        val cleanedUri = Uri.parse(cleanedUrl)
+        
+        val parametersToRemove = getRemovedParameters(originalUri, cleanedUri)
+        val parametersToKeep = cleanedUri.queryParameterNames.toList()
+        
+        // Find matching rule for display
+        val normalizedHost = if (originalUri.host != null) {
+            configManager.hostNormalizer.normalizeHost(originalUri.host!!).normalized
+        } else {
+            ""
+        }
+        
+        val matchingRule = if (normalizedHost.isNotEmpty()) {
+            findBestMatchingRule(normalizedHost, configManager.getCompiledRules())
+        } else {
+            null
+        }
+        
+        return ClipboardAnalysis(
+            originalUrl = clipText,
+            cleanedUrl = cleanedUrl,
+            isValidUrl = true,
+            hasChanges = clipText != cleanedUrl,
+            parametersToRemove = parametersToRemove,
+            parametersToKeep = parametersToKeep,
+            matchingRule = matchingRule?.originalRule?.description ?: matchingRule?.originalRule?.hostPattern
+        )
     }
 }

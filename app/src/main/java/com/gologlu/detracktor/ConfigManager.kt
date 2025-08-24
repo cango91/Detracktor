@@ -118,7 +118,7 @@ class ConfigManager(private val context: Context) {
      */
     fun getDefaultConfig(): AppConfig {
         return try {
-            val json = context.assets.open("enhanced_default_rules.json").bufferedReader().use { it.readText() }
+            val json = context.assets.open("default_rules.json").bufferedReader().use { it.readText() }
             gson.fromJson(json, AppConfig::class.java)
         } catch (e: Exception) {
             Log.w(TAG, "Default rules not found, using hardcoded default", e)

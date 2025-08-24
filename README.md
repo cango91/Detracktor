@@ -4,14 +4,12 @@ A tiny Android app that cleans URLs by removing tracking parameters on demand.
 
 ## Features
 
-- **No visible UI when used** - Triggered via Quick Settings tile, home widget, share menu, or shortcut
+- **Simple and fast** - Triggered via share menu or manual clipboard cleaning
 - **Multiple trigger methods**:
-  - Quick Settings tile
-  - Home screen widget
   - Share target (when sharing URLs from other apps)
   - Manual clipboard cleaning via main app
 - **Configurable cleaning modes**:
-  - Remove all parameters (default)
+  - Remove all parameters
   - Custom rules for specific websites
 - **Toast feedback**: Shows "Clipboard empty", "No change", or "Cleaned → copied"
 - **JSON configuration** with default rules for popular tracking parameters
@@ -28,9 +26,7 @@ When using custom rules mode, the app includes default rules for:
 ## How to Use
 
 1. **Share Menu**: Share any URL to Detracktor from another app
-2. **Quick Settings**: Add the "Clean URL" tile to your Quick Settings panel
-3. **Home Widget**: Add the Detracktor widget to your home screen
-4. **Manual**: Open the app and tap "Clean Clipboard URL"
+2. **Manual**: Open the app and tap "Clean Clipboard URL"
 
 ## Configuration
 

@@ -123,10 +123,7 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun showShareDialog(cleanedUrl: String, originalUrl: String) {
-        // Copy cleaned URL to clipboard
-        copyToClipboard(cleanedUrl)
-        
-        // Create share intent with cleaned URL
+        // Create share intent with cleaned URL (no clipboard copy for share intents)
         val shareIntent = Intent().apply {
             action = Intent.ACTION_SEND
             type = "text/plain"
@@ -176,7 +173,7 @@ class MainActivity : ComponentActivity() {
             CleaningResult.CLIPBOARD_EMPTY -> "Clipboard empty"
             CleaningResult.NOT_A_URL -> "Not a URL"
             CleaningResult.NO_CHANGE -> "No change"
-            CleaningResult.CLEANED_AND_COPIED -> "Cleaned → copied"
+            CleaningResult.CLEANED_AND_COPIED -> "Cleaned"
         }
         
         try {
@@ -272,7 +269,7 @@ fun ClipboardPreviewCard(analysis: com.gologlu.detracktor.data.ClipboardAnalysis
             
             if (!analysis.isValidUrl) {
                 Text(
-                    text = "Not a valid URL",
+                    text = "Clipboard content is not a valid URI",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error
                 )

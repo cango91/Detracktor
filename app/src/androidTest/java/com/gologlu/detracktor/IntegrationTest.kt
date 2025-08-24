@@ -82,13 +82,21 @@ class IntegrationTest {
         val config = configManager.loadConfig()
         assertNotNull("Config should be loaded", config)
         
-        // Test with tracking parameters that should be removed
-        val dirtyUrl = "https://twitter.com/user/status/123?utm_source=test&utm_medium=social&t=tracking&si=session"
+        // Test with tracking parameters that should be removed by composite rules
+        // Twitter-specific: ["s", "t", "ref_src", "ref_url"] + Global: ["utm_source", "utm_medium", ...]
+        val dirtyUrl = "https://twitter.com/user/status/123?utm_source=test&utm_medium=social&t=tracking&s=session"
         val cleanedUrl = urlCleanerService.cleanUrl(dirtyUrl)
         
         assertNotNull("Cleaned URL should not be null", cleanedUrl)
         assertTrue("URL should still be valid", cleanedUrl.startsWith("https://twitter.com"))
-        assertFalse("Should remove utm parameters", cleanedUrl.contains("utm_"))
+        // Check that at least some parameters were removed (the URL should be different)
+        assertTrue("Should remove tracking parameters", dirtyUrl != cleanedUrl)
+        // Verify Twitter-specific parameters are removed: ["s", "t", "ref_src", "ref_url"]
+        assertFalse("Should remove t parameter", cleanedUrl.contains("t="))
+        assertFalse("Should remove s parameter", cleanedUrl.contains("s="))
+        // Verify global UTM parameters are also removed by composite rules
+        assertFalse("Should remove utm_source parameter", cleanedUrl.contains("utm_source"))
+        assertFalse("Should remove utm_medium parameter", cleanedUrl.contains("utm_medium"))
     }
 
     @Test
@@ -114,9 +122,10 @@ class IntegrationTest {
         // Test clipboard operations (this will use the real clipboard)
         val result = urlCleanerService.cleanClipboardUrl()
         
-        // Result should be one of the valid enum values
+        // Result should be one of the valid enum values (including NOT_A_URL)
         assertTrue("Result should be valid CleaningResult", 
                   result in listOf(CleaningResult.CLIPBOARD_EMPTY, 
+                                 CleaningResult.NOT_A_URL,
                                  CleaningResult.NO_CHANGE, 
                                  CleaningResult.CLEANED_AND_COPIED))
     }

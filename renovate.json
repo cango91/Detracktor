@@ -1,0 +1,62 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":automergeDigest",
+    ":automergeBranch"
+  ],
+  "timezone": "America/New_York",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "assignees": ["@cango91"],
+  "reviewers": ["@cango91"],
+  "packageRules": [
+    {
+      "matchManagers": ["gradle"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "matchManagers": ["gradle"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "matchPackagePatterns": ["^androidx\\."],
+      "groupName": "AndroidX libraries",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["^com\\.android\\."],
+      "groupName": "Android Gradle Plugin",
+      "automerge": false,
+      "labels": ["dependencies", "android-gradle-plugin"]
+    },
+    {
+      "matchPackagePatterns": ["^org\\.jetbrains\\.kotlin"],
+      "groupName": "Kotlin",
+      "automerge": false,
+      "labels": ["dependencies", "kotlin"]
+    },
+    {
+      "matchPackagePatterns": ["^androidx\\.compose"],
+      "groupName": "Compose BOM and libraries",
+      "automerge": true
+    }
+  ],
+  "gradle": {
+    "timeout": 300
+  },
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+  "branchConcurrentLimit": 10,
+  "commitMessagePrefix": "chore(deps): ",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "prTitle": "chore(deps): update {{depName}} to {{newVersion}}",
+  "prBodyTemplate": "This PR updates {{depName}} from {{currentVersion}} to {{newVersion}}.\n\n{{#if hasReleaseNotes}}\n## Release Notes\n\n{{releaseNotes}}\n{{/if}}\n\n---\n\n- [ ] If you want to rebase/retry this PR, check this box"
+}

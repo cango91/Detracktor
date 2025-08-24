@@ -109,7 +109,7 @@ class UrlCleanerService(private val context: Context) {
     }
     
     /**
-     * Clean URL using hierarchical rule matching with host normalization
+     * Clean URL using hierarchical rule matching with host normalization and composite rule application
      */
     private fun cleanUrlWithHierarchicalRules(uri: Uri, compiledRules: List<CompiledRule>): String {
         val originalHost = uri.host ?: return uri.toString()
@@ -118,14 +118,14 @@ class UrlCleanerService(private val context: Context) {
         val normalizedUri = normalizeUrlHost(uri)
         val normalizedHost = normalizedUri.host ?: return uri.toString()
         
-        // Find the best matching rule using hierarchical matching
-        val bestRule = findBestMatchingRule(normalizedHost, compiledRules)
+        // Find all matching rules (not just the best one) for composite application
+        val matchingRules = findAllMatchingRules(normalizedHost, compiledRules)
         
-        return if (bestRule != null) {
-            // Apply the best matching rule
-            applyRuleToParameters(normalizedUri, bestRule)
+        return if (matchingRules.isNotEmpty()) {
+            // Apply all matching rules in order of specificity (most specific first)
+            applyCompositeRulesToParameters(normalizedUri, matchingRules)
         } else {
-            // No matching rule found, return original URL
+            // No matching rules found, return original URL
             uri.toString()
         }
     }
@@ -146,21 +146,30 @@ class UrlCleanerService(private val context: Context) {
     }
     
     /**
-     * Find the best matching rule using hierarchical specificity
+     * Find all matching rules for composite rule application
      */
-    fun findBestMatchingRule(normalizedHost: String, rules: List<CompiledRule>): CompiledRule? {
+    private fun findAllMatchingRules(normalizedHost: String, rules: List<CompiledRule>): List<CompiledRule> {
+        val matchingRules = mutableListOf<CompiledRule>()
+        
         // Rules are already sorted by specificity (most specific first)
         for (rule in rules) {
             if (!rule.originalRule.enabled) continue
             
             if (matchesCompiledRule(normalizedHost, rule)) {
+                matchingRules.add(rule)
                 Log.d(TAG, "Matched rule: ${rule.originalRule.hostPattern} (specificity: ${rule.specificity})")
-                return rule
             }
         }
         
-        Log.d(TAG, "No matching rule found for host: $normalizedHost")
-        return null
+        Log.d(TAG, "Found ${matchingRules.size} matching rules for host: $normalizedHost")
+        return matchingRules
+    }
+    
+    /**
+     * Find the best matching rule using hierarchical specificity (kept for backward compatibility)
+     */
+    fun findBestMatchingRule(normalizedHost: String, rules: List<CompiledRule>): CompiledRule? {
+        return findAllMatchingRules(normalizedHost, rules).firstOrNull()
     }
     
     /**
@@ -187,30 +196,42 @@ class UrlCleanerService(private val context: Context) {
     }
     
     /**
-     * Apply a compiled rule to URL parameters
+     * Apply composite rules to URL parameters (combines all matching rules)
      */
-    private fun applyRuleToParameters(uri: Uri, rule: CompiledRule): String {
+    private fun applyCompositeRulesToParameters(uri: Uri, rules: List<CompiledRule>): String {
         val queryParams = uri.queryParameterNames.toMutableSet()
         val paramsToRemove = mutableSetOf<String>()
+        val appliedRules = mutableListOf<String>()
         
-        // Use compiled parameter patterns for efficient matching
-        for (paramPattern in rule.compiledParamPatterns) {
-            paramsToRemove.addAll(queryParams.filter { param ->
-                paramPattern.matches(param)
-            })
-        }
-        
-        // Also handle simple string patterns that weren't compiled to regex
-        for (paramPattern in rule.originalRule.params) {
-            if (paramPattern.endsWith("*")) {
-                // Wildcard pattern
-                val prefix = paramPattern.dropLast(1)
-                paramsToRemove.addAll(queryParams.filter { it.startsWith(prefix) })
-            } else {
-                // Exact match
-                if (queryParams.contains(paramPattern)) {
-                    paramsToRemove.add(paramPattern)
+        // Apply all matching rules in order of specificity
+        for (rule in rules) {
+            val ruleParamsToRemove = mutableSetOf<String>()
+            
+            // Use compiled parameter patterns for efficient matching
+            for (paramPattern in rule.compiledParamPatterns) {
+                ruleParamsToRemove.addAll(queryParams.filter { param ->
+                    paramPattern.matches(param)
+                })
+            }
+            
+            // Also handle simple string patterns that weren't compiled to regex
+            for (paramPattern in rule.originalRule.params) {
+                if (paramPattern.endsWith("*")) {
+                    // Wildcard pattern
+                    val prefix = paramPattern.dropLast(1)
+                    ruleParamsToRemove.addAll(queryParams.filter { it.startsWith(prefix) })
+                } else {
+                    // Exact match
+                    if (queryParams.contains(paramPattern)) {
+                        ruleParamsToRemove.add(paramPattern)
+                    }
                 }
+            }
+            
+            if (ruleParamsToRemove.isNotEmpty()) {
+                paramsToRemove.addAll(ruleParamsToRemove)
+                appliedRules.add(rule.originalRule.hostPattern)
+                Log.d(TAG, "Rule ${rule.originalRule.hostPattern} removing: ${ruleParamsToRemove.joinToString(", ")}")
             }
         }
         
@@ -228,10 +249,17 @@ class UrlCleanerService(private val context: Context) {
         val result = builder.build().toString()
         
         if (paramsToRemove.isNotEmpty()) {
-            Log.d(TAG, "Removed parameters: ${paramsToRemove.joinToString(", ")} using rule: ${rule.originalRule.hostPattern}")
+            Log.d(TAG, "Composite rules removed parameters: ${paramsToRemove.joinToString(", ")} using rules: ${appliedRules.joinToString(", ")}")
         }
         
         return result
+    }
+    
+    /**
+     * Apply a compiled rule to URL parameters (kept for backward compatibility)
+     */
+    private fun applyRuleToParameters(uri: Uri, rule: CompiledRule): String {
+        return applyCompositeRulesToParameters(uri, listOf(rule))
     }
     
     /**

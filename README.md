@@ -1,4 +1,5 @@
 # Detracktor
+![vibe-coded](https://img.shields.io/badge/vibe--coded-✨-blue)
 
 A tiny Android app that cleans URLs by removing tracking parameters on demand.
 

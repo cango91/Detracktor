@@ -4,3 +4,12 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
 }
+
+buildscript {
+    dependencies {
+        classpath("org.jacoco:org.jacoco.core:0.8.13") // Use the latest version
+    }
+    repositories {
+        google()
+    }
+}

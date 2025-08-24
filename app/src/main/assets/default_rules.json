@@ -76,7 +76,7 @@
     },
     {
       "hostPattern": "instagram.com",
-      "params": ["igshid", "utm_*"],
+      "params": ["igsh", "igshid", "utm_*"],
       "priority": "EXACT_HOST",
       "patternType": "EXACT",
       "enabled": true,
@@ -84,7 +84,7 @@
     },
     {
       "hostPattern": "*.instagram.com",
-      "params": ["igshid", "utm_*"],
+      "params": ["igsh", "igshid", "utm_*"],
       "priority": "SUBDOMAIN_WILDCARD",
       "patternType": "WILDCARD",
       "enabled": true,

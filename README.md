@@ -1,6 +1,7 @@
 # Detracktor
 ![vibe-coded](https://img.shields.io/badge/vibe--coded-✨-blue)
 [![CI](https://github.com/cango91/Detracktor/actions/workflows/ci.yml/badge.svg)](https://github.com/cango91/Detracktor/actions/workflows/ci.yml)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/cango91/Detracktor)](https://github.com/cango91/Detracktor/releases)
 
 A tiny Android app that cleans URLs by removing tracking parameters on demand.
 

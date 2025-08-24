@@ -139,9 +139,11 @@ jobs:
         target: ${{ matrix.target }}
         arch: ${{ matrix.arch }}
         force-avd-creation: false
-        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-        disable-animations: false
-        script: echo "Generated AVD snapshot for caching."
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 2048 -no-snapshot-load
+        disable-animations: true
+        script: |
+          echo "Generated AVD snapshot for caching."
+          adb shell input keyevent 82
 
     - name: Run instrumented tests
       uses: reactivecircus/android-emulator-runner@v2
@@ -150,7 +152,7 @@ jobs:
         target: ${{ matrix.target }}
         arch: ${{ matrix.arch }}
         force-avd-creation: false
-        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 2048
         disable-animations: true
         script: ./gradlew connectedAndroidTest
 

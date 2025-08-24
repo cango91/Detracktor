@@ -76,7 +76,7 @@ jobs:
   # Matrix instrumented tests for minSdk and targetSdk
   instrumented-tests:
     runs-on: ubuntu-latest
-    if: ${{ needs.test.result == 'success' && (vars.RUN_INSTRUMENTED_TESTS == 'true' || github.event_name == 'pull_request') }}
+    if: ${{ needs.test.result == 'success' && vars.RUN_INSTRUMENTED_TESTS != 'false' }}
     needs: test
     strategy:
       fail-fast: false

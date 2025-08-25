@@ -14,7 +14,7 @@ A tiny Android app that cleans URLs by removing tracking parameters on demand.
 - **Configurable cleaning modes**:
   - Remove all parameters
   - Custom rules for specific websites
-- **Toast feedback**: Shows "Clipboard empty", "No change", or "Cleaned → copied"
+- **Toast feedback**: Shows "Clipboard empty", "No change", or "Cleaned"
 - **JSON configuration** with default rules for popular tracking parameters
 
 ## Default Cleaning Rules

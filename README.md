@@ -48,6 +48,10 @@ Open the app and tap "Settings" to:
 
 ## Installation
 
+### Download Release
+Download the latest APK from [Releases](https://github.com/cango91/Detracktor/releases) and install on your Android device.
+
+### Build from Source
 Build the APK using Android Studio or Gradle:
 
 ```bash
@@ -55,6 +59,26 @@ Build the APK using Android Studio or Gradle:
 ```
 
 The APK will be generated at `app/build/outputs/apk/debug/app-debug.apk`
+
+## Development
+
+### Version Management
+This project uses automated version synchronization between git tags and Android app versions:
+
+```bash
+# Set up git hooks (one-time setup for contributors)
+./scripts/setup-hooks.sh
+
+# Update version for new release
+./scripts/sync-version.sh v1.2.3
+
+# Commit and tag
+git add . && git commit -m "chore: bump version to 1.2.3"
+git tag v1.2.3
+git push origin main --tags
+```
+
+The pre-push hook automatically validates that git tags match the Android app version declared in `version.properties`.
 
 ## Privacy
 

@@ -1,4 +1,13 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+// Load version from version.properties file
+val versionPropsFile = file("../version.properties")
+val versionProps = Properties()
+if (versionPropsFile.exists()) {
+    versionProps.load(versionPropsFile.inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,8 +29,8 @@ android {
         applicationId = "com.gologlu.detracktor"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionProps.getProperty("VERSION_CODE", "1").toInt()
+        versionName = versionProps.getProperty("VERSION_NAME", "1.0")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -174,4 +183,12 @@ tasks.register<JacocoReport>("jacocoFullReport") {
             "outputs/code_coverage/debugAndroidTest/connected/coverage.ec"
         )
     })
+}
+
+// Task to verify version loading
+tasks.register("printVersion") {
+    doLast {
+        println("Version Name: ${android.defaultConfig.versionName}")
+        println("Version Code: ${android.defaultConfig.versionCode}")
+    }
 }

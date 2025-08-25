@@ -12,6 +12,10 @@ env:
   # Set this to 'false' in repository environment variables to disable instrumented tests
   RUN_INSTRUMENTED_TESTS: ${{ vars.RUN_INSTRUMENTED_TESTS != 'false' }}
 
+permissions:
+  contents: write  # Required for creating releases and uploading assets
+  actions: read    # Required for accessing workflow artifacts
+
 jobs:
   test:
     runs-on: ubuntu-latest

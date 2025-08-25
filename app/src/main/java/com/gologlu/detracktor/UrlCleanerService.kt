@@ -165,12 +165,7 @@ class UrlCleanerService(private val context: Context) {
         return matchingRules
     }
     
-    /**
-     * Find the best matching rule using hierarchical specificity (kept for backward compatibility)
-     */
-    fun findBestMatchingRule(normalizedHost: String, rules: List<CompiledRule>): CompiledRule? {
-        return findAllMatchingRules(normalizedHost, rules).firstOrNull()
-    }
+    
     
     /**
      * Check if a host matches a compiled rule
@@ -187,10 +182,27 @@ class UrlCleanerService(private val context: Context) {
                 rule.compiledHostPattern?.matches(host) ?: false
             }
             PatternType.PATH_PATTERN -> {
-                // For path patterns, we need to match against the full URL
-                // This is a simplified implementation - in practice, you'd want to
-                // pass the full URL path for matching
+                // PATH_PATTERN requires full URL matching - this method only handles host matching
+                // For PATH_PATTERN rules, use matchesCompiledRuleWithPath instead
                 rule.compiledHostPattern?.matches(host) ?: false
+            }
+        }
+    }
+    
+    /**
+     * Check if a full URL matches a compiled rule (supports PATH_PATTERN)
+     */
+    fun matchesCompiledRuleWithPath(fullUrl: String, rule: CompiledRule): Boolean {
+        return when (rule.originalRule.patternType) {
+            PatternType.EXACT, PatternType.WILDCARD, PatternType.REGEX -> {
+                // For non-path patterns, extract host and use standard matching
+                val uri = Uri.parse(fullUrl)
+                val host = uri.host ?: return false
+                matchesCompiledRule(host, rule)
+            }
+            PatternType.PATH_PATTERN -> {
+                // For path patterns, match against the full URL
+                rule.compiledHostPattern?.matches(fullUrl) ?: false
             }
         }
     }
@@ -209,9 +221,10 @@ class UrlCleanerService(private val context: Context) {
             
             // Use compiled parameter patterns for efficient matching
             for (paramPattern in rule.compiledParamPatterns) {
-                ruleParamsToRemove.addAll(queryParams.filter { param ->
+                val matchingParams = queryParams.filter { param ->
                     paramPattern.matches(param)
-                })
+                }
+                ruleParamsToRemove.addAll(matchingParams)
             }
             
             // Also handle simple string patterns that weren't compiled to regex
@@ -219,7 +232,8 @@ class UrlCleanerService(private val context: Context) {
                 if (paramPattern.endsWith("*")) {
                     // Wildcard pattern
                     val prefix = paramPattern.dropLast(1)
-                    ruleParamsToRemove.addAll(queryParams.filter { it.startsWith(prefix) })
+                    val matchingParams = queryParams.filter { it.startsWith(prefix) }
+                    ruleParamsToRemove.addAll(matchingParams)
                 } else {
                     // Exact match
                     if (queryParams.contains(paramPattern)) {
@@ -255,19 +269,7 @@ class UrlCleanerService(private val context: Context) {
         return result
     }
     
-    /**
-     * Apply a compiled rule to URL parameters (kept for backward compatibility)
-     */
-    private fun applyRuleToParameters(uri: Uri, rule: CompiledRule): String {
-        return applyCompositeRulesToParameters(uri, listOf(rule))
-    }
     
-    /**
-     * Calculate rule specificity for debugging
-     */
-    fun calculateRuleSpecificity(rule: CleaningRule): Int {
-        return com.gologlu.detracktor.utils.RuleSpecificity.calculate(rule)
-    }
     
     /**
      * Validate if string is a valid HTTP/HTTPS URL
@@ -336,7 +338,7 @@ class UrlCleanerService(private val context: Context) {
         }
         
         val matchingRule = if (normalizedHost.isNotEmpty()) {
-            findBestMatchingRule(normalizedHost, configManager.getCompiledRules())
+            findAllMatchingRules(normalizedHost, configManager.getCompiledRules()).firstOrNull()
         } else {
             null
         }
@@ -382,7 +384,7 @@ class UrlCleanerService(private val context: Context) {
                 hasChanges = false,
                 parametersToRemove = emptyList(),
                 parametersToKeep = emptyList(),
-                matchingRule = null
+                matchingRules = emptyList()
             )
         }
         
@@ -393,17 +395,19 @@ class UrlCleanerService(private val context: Context) {
         val parametersToRemove = getRemovedParameters(originalUri, cleanedUri)
         val parametersToKeep = cleanedUri.queryParameterNames.toList()
         
-        // Find matching rule for display
+        // Find all matching rules for display
         val normalizedHost = if (originalUri.host != null) {
             configManager.hostNormalizer.normalizeHost(originalUri.host!!).normalized
         } else {
             ""
         }
         
-        val matchingRule = if (normalizedHost.isNotEmpty()) {
-            findBestMatchingRule(normalizedHost, configManager.getCompiledRules())
+        val matchingRules = if (normalizedHost.isNotEmpty()) {
+            findAllMatchingRules(normalizedHost, configManager.getCompiledRules()).map { rule ->
+                rule.originalRule.description ?: rule.originalRule.hostPattern
+            }
         } else {
-            null
+            emptyList()
         }
         
         return ClipboardAnalysis(
@@ -413,7 +417,7 @@ class UrlCleanerService(private val context: Context) {
             hasChanges = clipText != cleanedUrl,
             parametersToRemove = parametersToRemove,
             parametersToKeep = parametersToKeep,
-            matchingRule = matchingRule?.originalRule?.description ?: matchingRule?.originalRule?.hostPattern
+            matchingRules = matchingRules
         )
     }
 }

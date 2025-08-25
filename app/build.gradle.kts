@@ -62,9 +62,6 @@ android {
         animationsDisabled = true
         unitTests {
             isReturnDefaultValues = true
-            all {
-                it.useJUnitPlatform()
-            }
         }
     }
     lint {
@@ -88,7 +85,7 @@ dependencies {
     
     // Enhanced URL cleaning dependencies
     implementation("com.ibm.icu:icu4j:77.1")  // IDN and internationalization support
-    implementation("org.apache.commons:commons-lang3:3.12.0")  // Enhanced regex and pattern matching
+    implementation("org.apache.commons:commons-lang3:3.18.0")  // Enhanced regex and pattern matching
     // Using Android's built-in LruCache instead of Caffeine for Android compatibility
     
     // Core library desugaring for compatibility
@@ -97,7 +94,6 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation("org.mockito:mockito-inline:5.2.0")  // Enhanced mocking for new functionality
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")  // JUnit 5 for advanced testing
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.junit)

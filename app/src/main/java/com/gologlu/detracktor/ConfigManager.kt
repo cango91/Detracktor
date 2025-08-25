@@ -11,7 +11,6 @@ import java.io.IOException
 
 /**
  * Configuration manager with rule compilation and caching.
- * Simplified version without backwards compatibility complexity.
  */
 class ConfigManager(private val context: Context) {
     
@@ -176,15 +175,23 @@ class ConfigManager(private val context: Context) {
     private fun createHardcodedDefault(): AppConfig {
         return AppConfig(
             version = 2,
-            removeAllParams = true,
+            removeAllParams = false,
             rules = listOf(
                 CleaningRule(
+                    hostPattern = "*.instagram.com",
+                    params = listOf("igsh", "igshid", "utm_*"),
+                    priority = RulePriority.SUBDOMAIN_WILDCARD,
+                    patternType = PatternType.WILDCARD,
+                    enabled = true,
+                    description = "Instagram tracking parameters (subdomains)"
+                ),
+                CleaningRule(
                     hostPattern = "*",
-                    params = listOf("utm_*", "fbclid", "gclid", "ref", "source"),
+                    params = listOf("utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "msclkid", "_ga", "_gl"),
                     priority = RulePriority.GLOBAL_WILDCARD,
                     patternType = PatternType.WILDCARD,
                     enabled = true,
-                    description = "Default global tracking parameter removal"
+                    description = "Common tracking parameters across all sites"
                 )
             ),
             hostNormalization = HostNormalizationConfig(),

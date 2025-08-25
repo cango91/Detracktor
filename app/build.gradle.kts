@@ -92,7 +92,7 @@ dependencies {
     // Using Android's built-in LruCache instead of Caffeine for Android compatibility
     
     // Core library desugaring for compatibility
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

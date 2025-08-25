@@ -146,6 +146,7 @@ jobs:
           adb shell input keyevent 82
 
     - name: Run instrumented tests
+      timeout-minutes: 30
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: ${{ matrix.api-level }}
@@ -156,7 +157,25 @@ jobs:
         disable-animations: true
         script: ./gradlew connectedAndroidTest
 
+    - name: Force cleanup emulator processes
+      if: always()
+      run: |
+        pkill -f emulator || true
+        pkill -f qemu || true
+        
+    - name: Check coverage report exists
+      id: coverage-check
+      run: |
+        if [ -f "./app/build/reports/coverage/androidTest/debug/connected/report.xml" ]; then
+          echo "coverage_exists=true" >> $GITHUB_OUTPUT
+          echo "Coverage report found"
+        else
+          echo "coverage_exists=false" >> $GITHUB_OUTPUT
+          echo "Coverage report not found"
+        fi
+
     - name: Upload coverage to Codecov
+      if: steps.coverage-check.outputs.coverage_exists == 'true'
       uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

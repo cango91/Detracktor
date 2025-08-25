@@ -87,7 +87,7 @@ dependencies {
     implementation(libs.androidx.preference.ktx)  // Settings
     
     // Enhanced URL cleaning dependencies
-    implementation("com.ibm.icu:icu4j:72.1")  // IDN and internationalization support
+    implementation("com.ibm.icu:icu4j:77.1")  // IDN and internationalization support
     implementation("org.apache.commons:commons-lang3:3.12.0")  // Enhanced regex and pattern matching
     // Using Android's built-in LruCache instead of Caffeine for Android compatibility
     

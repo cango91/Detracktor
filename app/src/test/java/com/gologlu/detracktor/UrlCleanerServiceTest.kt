@@ -133,57 +133,47 @@ class UrlCleanerServiceTest {
     }
 
     @Test
-    fun testFindBestMatchingRule_withMatchingRule_returnsRule() {
-        // Given
-        val host = "example.com"
-        val rule = CompiledRule(
-            originalRule = CleaningRule(
-                hostPattern = "example.com",
-                params = listOf("utm_*"),
-                                    priority = RulePriority.EXACT_HOST,
-                patternType = PatternType.EXACT,
-                enabled = true,
-                description = "Test rule"
-            ),
-            compiledHostPattern = null,
-            compiledParamPatterns = emptyList(),
-            normalizedHostPattern = "example.com",
-            specificity = 100
-        )
-        val rules = listOf(rule)
+    fun testCleanUrl_withGlobalTrackingParameters_removesParameters() {
+        // Given - URL with global tracking parameters that should be removed
+        val originalUrl = "https://example.com/page?utm_source=test&utm_medium=email&fbclid=tracking&id=123"
         
         // When
-        val result = urlCleanerService.findBestMatchingRule(host, rules)
+        val result = urlCleanerService.cleanUrl(originalUrl)
         
         // Then
-        assertEquals(rule, result)
+        assertNotNull(result)
+        assertTrue("Should remove utm_source", !result.contains("utm_source="))
+        assertTrue("Should remove utm_medium", !result.contains("utm_medium="))
+        assertTrue("Should remove fbclid", !result.contains("fbclid="))
+        // Note: id parameter should be kept since it's not in any removal rules
+        // But let's check what actually happens first
+        println("Original: $originalUrl")
+        println("Cleaned:  $result")
     }
 
     @Test
-    fun testFindBestMatchingRule_withNoMatchingRule_returnsNull() {
-        // Given
-        val host = "different.com"
-        val rule = CompiledRule(
-            originalRule = CleaningRule(
-                hostPattern = "example.com",
-                params = listOf("utm_*"),
-                                    priority = RulePriority.EXACT_HOST,
-                patternType = PatternType.EXACT,
-                enabled = true,
-                description = "Test rule"
-            ),
-            compiledHostPattern = null,
-            compiledParamPatterns = emptyList(),
-            normalizedHostPattern = "example.com",
-            specificity = 100
-        )
-        val rules = listOf(rule)
+    fun testCleanUrl_withHierarchicalRuleMatching_appliesMultipleRules() {
+        // Given - Instagram URL that should match both specific and global rules
+        val originalUrl = "https://www.instagram.com/p/ABC123/?igsh=session123&utm_source=facebook&custom=keep"
         
         // When
-        val result = urlCleanerService.findBestMatchingRule(host, rules)
+        val result = urlCleanerService.cleanUrl(originalUrl)
+        
+        // Debug output
+        println("=== DEBUG TEST OUTPUT ===")
+        println("Original URL: $originalUrl")
+        println("Cleaned URL:  $result")
+        println("========================")
         
         // Then
-        assertEquals(null, result)
+        assertNotNull(result)
+        assertTrue("Should still be Instagram URL", result.contains("instagram.com"))
+        assertTrue("Should still contain post path", result.contains("/p/ABC123/"))
+        // Both Instagram-specific (igsh) and global (utm_source) parameters should be removed
+        assertFalse("Should remove igsh parameter", result.contains("igsh="))
+        assertFalse("Should remove utm_source parameter", result.contains("utm_source="))
+        // Custom parameters not in any rule should remain
+        assertTrue("Should keep custom parameter", result.contains("custom=keep"))
     }
 
     @Test
@@ -240,22 +230,30 @@ class UrlCleanerServiceTest {
     }
 
     @Test
-    fun testCalculateRuleSpecificity_returnsValidSpecificity() {
+    fun testAnalyzeClipboardContent_withMultipleMatchingRules_returnsAllRules() {
         // Given
-        val rule = CleaningRule(
-            hostPattern = "example.com",
-            params = listOf("utm_*"),
-                                priority = RulePriority.EXACT_HOST,
-            patternType = PatternType.EXACT,
-            enabled = true,
-            description = "Test rule"
-        )
+        val context = org.robolectric.RuntimeEnvironment.getApplication()
+        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val testUrl = "https://www.instagram.com/p/ABC123/?igsh=session123&utm_source=facebook&hl=en"
+        
+        // Set up clipboard with test URL that should match multiple rules
+        val clipData = ClipData.newPlainText("test", testUrl)
+        clipboardManager.setPrimaryClip(clipData)
         
         // When
-        val result = urlCleanerService.calculateRuleSpecificity(rule)
+        val result = urlCleanerService.analyzeClipboardContent()
         
         // Then
-        assertTrue(result > 0)
+        assertNotNull(result)
+        assertTrue("Should be valid URL", result!!.isValidUrl)
+        assertTrue("Should have changes", result.hasChanges)
+        assertTrue("Should have parameters to remove", result.parametersToRemove.isNotEmpty())
+        assertTrue("Should have matching rules", result.matchingRules.isNotEmpty())
+        // Should contain both igsh and utm_source in parameters to remove
+        assertTrue("Should remove igsh", result.parametersToRemove.contains("igsh"))
+        assertTrue("Should remove utm_source", result.parametersToRemove.contains("utm_source"))
+        // Should keep hl parameter
+        assertTrue("Should keep hl", result.parametersToKeep.contains("hl"))
     }
 
     @Test

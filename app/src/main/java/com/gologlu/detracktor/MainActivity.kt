@@ -300,12 +300,20 @@ fun ClipboardPreviewCard(analysis: com.gologlu.detracktor.data.ClipboardAnalysis
                         color = Color.Red
                     )
                     
-                    analysis.matchingRule?.let { rule ->
+                    if (analysis.matchingRules.isNotEmpty()) {
                         Text(
-                            text = "Matching rule: $rule",
+                            text = "Matching rules:",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
+                        analysis.matchingRules.forEach { rule ->
+                            Text(
+                                text = "• $rule",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
                     }
                 } else {
                     Text(

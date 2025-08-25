@@ -10,5 +10,5 @@ data class ClipboardAnalysis(
     val hasChanges: Boolean,
     val parametersToRemove: List<String>,
     val parametersToKeep: List<String>,
-    val matchingRule: String?
+    val matchingRules: List<String>
 )

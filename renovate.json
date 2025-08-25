@@ -1,50 +1,84 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
+    "config:recommended",
     ":dependencyDashboard",
     ":semanticCommits",
     ":automergeDigest",
     ":automergeBranch"
   ],
   "timezone": "America/New_York",
-  "schedule": ["before 6am on monday"],
-  "labels": ["dependencies"],
-  "assignees": ["@cango91"],
-  "reviewers": ["@cango91"],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "assignees": [
+    "@cango91"
+  ],
+  "reviewers": [
+    "@cango91"
+  ],
   "packageRules": [
     {
-      "matchManagers": ["gradle"],
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchManagers": [
+        "gradle"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "automerge": true
     },
     {
-      "matchManagers": ["gradle"],
-      "matchUpdateTypes": ["major"],
+      "matchManagers": [
+        "gradle"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "automerge": false,
-      "labels": ["dependencies", "major-update"]
+      "labels": [
+        "dependencies",
+        "major-update"
+      ]
     },
     {
-      "matchPackagePatterns": ["^androidx\\."],
       "groupName": "AndroidX libraries",
-      "automerge": true
+      "automerge": true,
+      "matchPackageNames": [
+        "/^androidx\\./"
+      ]
     },
     {
-      "matchPackagePatterns": ["^com\\.android\\."],
       "groupName": "Android Gradle Plugin",
       "automerge": false,
-      "labels": ["dependencies", "android-gradle-plugin"]
+      "labels": [
+        "dependencies",
+        "android-gradle-plugin"
+      ],
+      "matchPackageNames": [
+        "/^com\\.android\\./"
+      ]
     },
     {
-      "matchPackagePatterns": ["^org\\.jetbrains\\.kotlin"],
       "groupName": "Kotlin",
       "automerge": false,
-      "labels": ["dependencies", "kotlin"]
+      "labels": [
+        "dependencies",
+        "kotlin"
+      ],
+      "matchPackageNames": [
+        "/^org\\.jetbrains\\.kotlin/"
+      ]
     },
     {
-      "matchPackagePatterns": ["^androidx\\.compose"],
       "groupName": "Compose BOM and libraries",
-      "automerge": true
+      "automerge": true,
+      "matchPackageNames": [
+        "/^androidx\\.compose/"
+      ]
     }
   ],
   "gradle": {

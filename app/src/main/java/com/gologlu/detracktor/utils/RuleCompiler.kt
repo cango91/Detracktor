@@ -101,12 +101,23 @@ class RuleCompiler(private val config: PerformanceConfig) {
     fun compileParamPatterns(params: List<String>): List<Regex> {
         return params.mapNotNull { param ->
             try {
+                // Validate pattern for security vulnerabilities first
+                if (config.enableRegexValidation) {
+                    val validation = RegexValidator.validatePattern(param, config.regexTimeoutMs)
+                    if (!validation.isValid) {
+                        Log.w(TAG, "Skipping invalid param pattern: $param - ${validation.errorMessage}")
+                        return@mapNotNull null
+                    }
+                }
+                
                 val cacheKey = "param:$param"
                 
                 if (config.enablePatternCaching) {
                     patternCache.get(cacheKey) ?: run {
                         val compiled = compileParamPattern(param)
-                        patternCache.put(cacheKey, compiled)
+                        if (compiled != null) {
+                            patternCache.put(cacheKey, compiled)
+                        }
                         compiled
                     }
                 } else {
@@ -165,10 +176,19 @@ class RuleCompiler(private val config: PerformanceConfig) {
     }
     
     private fun compileHostPatternInternal(pattern: String, type: PatternType): Regex? {
+        // Only validate REGEX patterns directly - WILDCARD and PATH_PATTERN are converted first
+        if (type == PatternType.REGEX && config.enableRegexValidation) {
+            val validation = RegexValidator.validatePattern(pattern, config.regexTimeoutMs)
+            if (!validation.isValid) {
+                Log.w(TAG, "Skipping invalid regex host pattern: $pattern - ${validation.errorMessage}")
+                return null
+            }
+        }
+        
         return when (type) {
             PatternType.EXACT -> null
             PatternType.WILDCARD -> compileWildcardPattern(pattern)
-            PatternType.REGEX -> Regex(pattern, RegexOption.IGNORE_CASE)
+            PatternType.REGEX -> compileRegexPatternSafely(pattern)
             PatternType.PATH_PATTERN -> compilePathPattern(pattern)
         }
     }
@@ -201,7 +221,49 @@ class RuleCompiler(private val config: PerformanceConfig) {
             .replace("*", ".*")
             .replace("?", ".")
         
-        return Regex("^$regexPattern$", RegexOption.IGNORE_CASE)
+        return compileRegexPatternSafely("^$regexPattern$") ?: Regex("^$regexPattern$", RegexOption.IGNORE_CASE)
+    }
+    
+    /**
+     * Safely compile a regex pattern with ReDoS protection and timeout handling
+     */
+    private fun compileRegexPatternSafely(pattern: String): Regex? {
+        if (!config.enableRegexValidation) {
+            // If validation is disabled, use direct compilation (legacy behavior)
+            return try {
+                Regex(pattern, RegexOption.IGNORE_CASE)
+            } catch (e: Exception) {
+                Log.w(TAG, "Direct regex compilation failed for pattern: $pattern", e)
+                null
+            }
+        }
+        
+        return try {
+            // Use RegexValidator for safe compilation with timeout protection
+            RegexValidator.compileWithTimeout(
+                pattern = pattern,
+                timeoutMs = config.regexTimeoutMs,
+                options = setOf(RegexOption.IGNORE_CASE)
+            )
+        } catch (e: RegexTimeoutException) {
+            Log.w(TAG, "Regex compilation timed out for pattern: $pattern", e)
+            null
+        } catch (e: Exception) {
+            Log.w(TAG, "Safe regex compilation failed for pattern: $pattern", e)
+            null
+        }
+    }
+    
+    /**
+     * Validates a regex pattern for security vulnerabilities before compilation
+     */
+    fun validatePattern(pattern: String): ValidationResult {
+        return if (config.enableRegexValidation) {
+            RegexValidator.validatePattern(pattern, config.regexTimeoutMs)
+        } else {
+            // If validation is disabled, assume pattern is valid
+            ValidationResult(true)
+        }
     }
     
     private fun normalizeHostPattern(hostPattern: String): String {

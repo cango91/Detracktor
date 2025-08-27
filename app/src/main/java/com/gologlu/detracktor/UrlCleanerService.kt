@@ -8,6 +8,8 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import com.gologlu.detracktor.data.*
+import com.gologlu.detracktor.utils.ClipboardContentFilter
+import com.gologlu.detracktor.utils.UrlPrivacyAnalyzer
 import java.net.URL
 
 /**
@@ -363,7 +365,7 @@ class UrlCleanerService(private val context: Context) {
     }
     
     /**
-     * Analyze clipboard content for preview in UI
+     * Analyze clipboard content for preview in UI with privacy-conscious content filtering
      */
     fun analyzeClipboardContent(): ClipboardAnalysis? {
         val clipData = clipboardManager.primaryClip
@@ -376,48 +378,63 @@ class UrlCleanerService(private val context: Context) {
             return null
         }
         
-        if (!isValidHttpUrl(clipText)) {
-            return ClipboardAnalysis(
+        // Create initial analysis for content filtering decision
+        val initialAnalysis = if (!isValidHttpUrl(clipText)) {
+            ClipboardAnalysis(
                 originalUrl = clipText,
                 cleanedUrl = clipText,
                 isValidUrl = false,
                 hasChanges = false,
                 parametersToRemove = emptyList(),
                 parametersToKeep = emptyList(),
-                matchingRules = emptyList()
+                matchingRules = emptyList(),
+                shouldDisplayContent = true // Will be updated by content filter
+            )
+        } else {
+            val cleanedUrl = cleanUrl(clipText)
+            val originalUri = Uri.parse(clipText)
+            val cleanedUri = Uri.parse(cleanedUrl)
+            
+            val parametersToRemove = getRemovedParameters(originalUri, cleanedUri)
+            val parametersToKeep = cleanedUri.queryParameterNames.toList()
+            
+            // Find all matching rules for display
+            val normalizedHost = if (originalUri.host != null) {
+                configManager.hostNormalizer.normalizeHost(originalUri.host!!).normalized
+            } else {
+                ""
+            }
+            
+            val matchingRules = if (normalizedHost.isNotEmpty()) {
+                findAllMatchingRules(normalizedHost, configManager.getCompiledRules()).map { rule ->
+                    rule.originalRule.description ?: rule.originalRule.hostPattern
+                }
+            } else {
+                emptyList()
+            }
+            
+            // Generate privacy analysis for URLs
+            val privacyAnalysis = UrlPrivacyAnalyzer.analyzeUrlEnhanced(
+                clipText, 
+                parametersToRemove
+            )
+            
+            ClipboardAnalysis(
+                originalUrl = clipText,
+                cleanedUrl = cleanedUrl,
+                isValidUrl = true,
+                hasChanges = clipText != cleanedUrl,
+                parametersToRemove = parametersToRemove,
+                parametersToKeep = parametersToKeep,
+                matchingRules = matchingRules,
+                shouldDisplayContent = true, // Will be updated by content filter
+                privacyAnalysis = privacyAnalysis
             )
         }
         
-        val cleanedUrl = cleanUrl(clipText)
-        val originalUri = Uri.parse(clipText)
-        val cleanedUri = Uri.parse(cleanedUrl)
+        // Apply privacy-conscious content filtering
+        val shouldDisplayContent = ClipboardContentFilter.shouldDisplayContent(initialAnalysis)
         
-        val parametersToRemove = getRemovedParameters(originalUri, cleanedUri)
-        val parametersToKeep = cleanedUri.queryParameterNames.toList()
-        
-        // Find all matching rules for display
-        val normalizedHost = if (originalUri.host != null) {
-            configManager.hostNormalizer.normalizeHost(originalUri.host!!).normalized
-        } else {
-            ""
-        }
-        
-        val matchingRules = if (normalizedHost.isNotEmpty()) {
-            findAllMatchingRules(normalizedHost, configManager.getCompiledRules()).map { rule ->
-                rule.originalRule.description ?: rule.originalRule.hostPattern
-            }
-        } else {
-            emptyList()
-        }
-        
-        return ClipboardAnalysis(
-            originalUrl = clipText,
-            cleanedUrl = cleanedUrl,
-            isValidUrl = true,
-            hasChanges = clipText != cleanedUrl,
-            parametersToRemove = parametersToRemove,
-            parametersToKeep = parametersToKeep,
-            matchingRules = matchingRules
-        )
+        return initialAnalysis.copy(shouldDisplayContent = shouldDisplayContent)
     }
 }

@@ -20,7 +20,9 @@ class RuleCompilerTest {
         performanceConfig = PerformanceConfig(
             enablePatternCaching = true,
             maxCacheSize = 100,
-            recompileOnConfigChange = true
+            recompileOnConfigChange = true,
+            regexTimeoutMs = 1000L,
+            enableRegexValidation = true
         )
         ruleCompiler = RuleCompiler(performanceConfig)
     }
@@ -381,5 +383,230 @@ class RuleCompilerTest {
         assertTrue(regex!!.matches("example.com/api/v1"))
         assertTrue(regex.matches("example.com/api/users"))
         assertTrue(!regex.matches("example.com/web/page"))
+    }
+
+    // Security-related tests
+
+    @Test
+    fun testValidatePattern_withValidPattern_returnsValid() {
+        // Given
+        val validPattern = "example\\.com"
+
+        // When
+        val result = ruleCompiler.validatePattern(validPattern)
+
+        // Then
+        assertTrue("Valid pattern should pass validation", result.isValid)
+        assertNull("Should not have error message", result.errorMessage)
+        assertFalse("Should not be flagged as ReDoS vulnerable", result.isReDoSVulnerable)
+    }
+
+    @Test
+    fun testValidatePattern_withReDoSPattern_returnsInvalid() {
+        // Given
+        val reDoSPattern = "(a+)+b"
+
+        // When
+        val result = ruleCompiler.validatePattern(reDoSPattern)
+
+        // Then
+        assertFalse("ReDoS pattern should fail validation", result.isValid)
+        assertTrue("Should be flagged as ReDoS vulnerable", result.isReDoSVulnerable)
+        assertTrue("Error message should mention ReDoS", 
+            result.errorMessage?.contains("ReDoS vulnerability") == true)
+    }
+
+    @Test
+    fun testValidatePattern_withValidationDisabled_returnsValid() {
+        // Given
+        val configWithoutValidation = PerformanceConfig(
+            enablePatternCaching = true,
+            maxCacheSize = 100,
+            recompileOnConfigChange = true,
+            regexTimeoutMs = 1000L,
+            enableRegexValidation = false
+        )
+        val compilerWithoutValidation = RuleCompiler(configWithoutValidation)
+        val reDoSPattern = "(a+)+b"
+
+        // When
+        val result = compilerWithoutValidation.validatePattern(reDoSPattern)
+
+        // Then
+        assertTrue("Should return valid when validation is disabled", result.isValid)
+    }
+
+    @Test
+    fun testCompileRule_withReDoSPattern_returnsFallbackRule() {
+        // Given
+        val rule = CleaningRule(
+            hostPattern = "(a+)+\\.example\\.com",
+            params = listOf("utm_*"),
+            priority = RulePriority.EXACT_HOST,
+            patternType = PatternType.REGEX,
+            enabled = true,
+            description = "ReDoS vulnerable rule"
+        )
+
+        // When
+        val compiledRule = ruleCompiler.compileRule(rule)
+
+        // Then
+        assertNotNull(compiledRule)
+        assertEquals(rule, compiledRule.originalRule)
+        // Should return fallback due to ReDoS detection
+        assertNull(compiledRule.compiledHostPattern)
+        assertEquals(0, compiledRule.specificity)
+    }
+
+    @Test
+    fun testCompileHostPattern_withSecurityValidation_rejectsReDoSPatterns() {
+        // Given
+        val reDoSPattern = "(a+)+\\.example\\.com"
+        val type = PatternType.REGEX
+
+        // When
+        val result = ruleCompiler.compileHostPattern(reDoSPattern, type)
+
+        // Then
+        assertNull("ReDoS pattern should be rejected", result)
+    }
+
+    @Test
+    fun testCompileHostPattern_withValidationDisabled_allowsReDoSPatterns() {
+        // Given
+        val configWithoutValidation = PerformanceConfig(
+            enablePatternCaching = true,
+            maxCacheSize = 100,
+            recompileOnConfigChange = true,
+            regexTimeoutMs = 1000L,
+            enableRegexValidation = false
+        )
+        val compilerWithoutValidation = RuleCompiler(configWithoutValidation)
+        val reDoSPattern = "a+\\.example\\.com" // Less dangerous but still potentially problematic
+        val type = PatternType.REGEX
+
+        // When
+        val result = compilerWithoutValidation.compileHostPattern(reDoSPattern, type)
+
+        // Then
+        // Should compile when validation is disabled (though not recommended)
+        assertNotNull("Pattern should compile when validation is disabled", result)
+    }
+
+    @Test
+    fun testCompileParamPatterns_withReDoSPattern_skipsVulnerablePatterns() {
+        // Given
+        val params = listOf("utm_*", "(a+)+", "fbclid")
+
+        // When
+        val result = ruleCompiler.compileParamPatterns(params)
+
+        // Then
+        assertNotNull(result)
+        // Should have 2 valid patterns (ReDoS pattern skipped)
+        assertEquals("Should skip ReDoS vulnerable pattern", 2, result.size)
+        
+        // Verify the valid patterns work
+        assertTrue("First pattern should match utm_source", result[0].matches("utm_source"))
+        assertTrue("Second pattern should match fbclid", result[1].matches("fbclid"))
+    }
+
+    @Test
+    fun testSecurityConfiguration_respectsTimeoutSettings() {
+        // Given
+        val shortTimeoutConfig = PerformanceConfig(
+            enablePatternCaching = true,
+            maxCacheSize = 100,
+            recompileOnConfigChange = true,
+            regexTimeoutMs = 100L, // Very short timeout
+            enableRegexValidation = true
+        )
+        val compilerWithShortTimeout = RuleCompiler(shortTimeoutConfig)
+        val complexPattern = "^https?://(?:[-\\w.])+(?:[:\\d]+)?(?:/(?:[\\w/_.])*(?:\\?(?:[\\w&=%.])*)?(?:#(?:[\\w.])*)?)?$"
+
+        // When
+        val result = compilerWithShortTimeout.validatePattern(complexPattern)
+
+        // Then
+        // Should still work for reasonable patterns even with short timeout
+        assertTrue("Complex but safe pattern should validate successfully", result.isValid)
+    }
+
+    @Test
+    fun testCompileRules_withMixedSecurityPatterns_filtersCorrectly() {
+        // Given
+        val rules = listOf(
+            CleaningRule(
+                hostPattern = "example.com",
+                params = listOf("utm_*"),
+                priority = RulePriority.EXACT_HOST,
+                patternType = PatternType.EXACT,
+                enabled = true,
+                description = "Safe exact rule"
+            ),
+            CleaningRule(
+                hostPattern = ".*\\.safe\\.com",
+                params = listOf("tracking_*"),
+                priority = RulePriority.SUBDOMAIN_WILDCARD,
+                patternType = PatternType.REGEX,
+                enabled = true,
+                description = "Safe regex rule"
+            ),
+            CleaningRule(
+                hostPattern = "(a+)+\\.dangerous\\.com",
+                params = listOf("param"),
+                priority = RulePriority.SUBDOMAIN_WILDCARD,
+                patternType = PatternType.REGEX,
+                enabled = true,
+                description = "Dangerous ReDoS rule"
+            )
+        )
+
+        // When
+        val compiledRules = ruleCompiler.compileRules(rules)
+
+        // Then
+        assertNotNull(compiledRules)
+        assertEquals(3, compiledRules.size)
+        
+        // First rule should compile normally
+        assertNotNull(compiledRules[0].originalRule)
+        assertTrue(compiledRules[0].specificity > 0)
+        
+        // Second rule should compile normally
+        assertNotNull(compiledRules[1].originalRule)
+        assertNotNull(compiledRules[1].compiledHostPattern)
+        assertTrue(compiledRules[1].specificity > 0)
+        
+        // Third rule should have fallback compilation due to ReDoS
+        assertNotNull(compiledRules[2].originalRule)
+        assertNull(compiledRules[2].compiledHostPattern)
+        assertEquals(0, compiledRules[2].specificity)
+    }
+
+    @Test
+    fun testPerformanceImpact_securityValidationDoesNotSlowDownNormalPatterns() {
+        // Given
+        val normalPatterns = listOf(
+            "example.com",
+            "*.example.com", 
+            "test\\.domain\\.com",
+            "api\\.service\\.org"
+        )
+        
+        // When & Then
+        val startTime = System.currentTimeMillis()
+        
+        normalPatterns.forEach { pattern ->
+            val result = ruleCompiler.validatePattern(pattern)
+            assertTrue("Pattern '$pattern' should validate quickly", result.isValid)
+        }
+        
+        val endTime = System.currentTimeMillis()
+        val totalTime = endTime - startTime
+        
+        assertTrue("Security validation should not significantly impact performance", 
+            totalTime < 1000) // Should complete well under 1 second
     }
 }

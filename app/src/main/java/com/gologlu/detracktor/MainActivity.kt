@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,20 +27,25 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.gologlu.detracktor.data.CleaningResult
 import com.gologlu.detracktor.ui.theme.DetracktorTheme
+import com.gologlu.detracktor.utils.ClipboardContentFilter
+import com.gologlu.detracktor.utils.UrlPrivacyAnalyzer
 
 class MainActivity : ComponentActivity() {
     
     private lateinit var urlCleanerService: UrlCleanerService
+    private lateinit var sharedPreferences: android.content.SharedPreferences
 
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         urlCleanerService = UrlCleanerService(this)
+        sharedPreferences = getSharedPreferences("detracktor_prefs", MODE_PRIVATE)
         
         // Handle the intent if this activity was launched with a URL to clean
         handleIntent(intent)
@@ -197,6 +204,7 @@ fun MainScreen(
     onOpenConfig: () -> Unit
 ) {
     var clipboardAnalysis by remember { mutableStateOf<com.gologlu.detracktor.data.ClipboardAnalysis?>(null) }
+    var privacyBlurEnabled by remember { mutableStateOf(true) }
     
     // Update clipboard analysis periodically
     LaunchedEffect(Unit) {
@@ -226,9 +234,41 @@ fun MainScreen(
             textAlign = TextAlign.Center
         )
         
+        // Privacy Toggle
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Privacy Blur",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "Hide sensitive URL components",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = privacyBlurEnabled,
+                    onCheckedChange = { privacyBlurEnabled = it }
+                )
+            }
+        }
+        
         // Clipboard Preview Card
         clipboardAnalysis?.let { analysis ->
-            ClipboardPreviewCard(analysis = analysis)
+            ClipboardPreviewCard(
+                analysis = analysis,
+                privacyBlurEnabled = privacyBlurEnabled
+            )
         }
         
         Button(
@@ -254,7 +294,10 @@ fun MainScreen(
 }
 
 @Composable
-fun ClipboardPreviewCard(analysis: com.gologlu.detracktor.data.ClipboardAnalysis) {
+fun ClipboardPreviewCard(
+    analysis: com.gologlu.detracktor.data.ClipboardAnalysis,
+    privacyBlurEnabled: Boolean = true
+) {
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -273,25 +316,47 @@ fun ClipboardPreviewCard(analysis: com.gologlu.detracktor.data.ClipboardAnalysis
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error
                 )
-                Text(
-                    text = analysis.originalUrl,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+                
+                // Privacy-conscious content display - only show if shouldDisplayContent is true
+                if (analysis.shouldDisplayContent) {
+                    Text(
+                        text = analysis.originalUrl,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                } else {
+                    Text(
+                        text = "[Content hidden for privacy]",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             } else {
-                // Show URL with highlighted parameters
+                // Show URL with highlighted parameters and privacy blurring
                 Text(
                     text = "URL Preview:",
                     style = MaterialTheme.typography.labelMedium
                 )
                 
-                Text(
-                    text = buildUrlWithHighlights(analysis),
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
+                if (privacyBlurEnabled && analysis.privacyAnalysis != null) {
+                    // Use enhanced privacy analysis for selective display
+                    Text(
+                        text = buildPrivacyAwareUrlDisplay(analysis, analysis.privacyAnalysis!!),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                } else {
+                    // Show traditional URL with parameter highlights
+                    Text(
+                        text = buildUrlWithHighlights(analysis),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
                 
                 if (analysis.hasChanges) {
                     Text(
@@ -356,5 +421,74 @@ fun buildUrlWithHighlights(analysis: com.gologlu.detracktor.data.ClipboardAnalys
                 append(paramString)
             }
         }
+    }
+}
+
+@Composable
+fun buildPrivacyAwareUrlDisplay(
+    analysis: com.gologlu.detracktor.data.ClipboardAnalysis,
+    privacyAnalysis: UrlPrivacyAnalyzer.UrlPrivacyAnalysis
+) = buildAnnotatedString {
+    // Show scheme and safe host (always visible)
+    append("${privacyAnalysis.scheme}://")
+    
+    // Handle credentials - blur if present
+    if (privacyAnalysis.hasCredentials) {
+        withStyle(style = SpanStyle(
+            color = Color.Gray,
+            textDecoration = TextDecoration.LineThrough
+        )) {
+            append("[credentials]")
+        }
+        append("@")
+    }
+    
+    // Show safe host (always visible)
+    append(privacyAnalysis.safeHost)
+    
+    // Show port if present
+    if (privacyAnalysis.port.isNotEmpty()) {
+        append(":${privacyAnalysis.port}")
+    }
+    
+    // Show path (always visible in simplified approach)
+    if (privacyAnalysis.path.isNotEmpty()) {
+        append(privacyAnalysis.path)
+    }
+    
+    // Handle query parameters - simplified approach
+    val matchingParams = privacyAnalysis.matchingParameters
+    val nonMatchingParams = privacyAnalysis.nonMatchingParameters
+    
+    if (matchingParams.isNotEmpty() || nonMatchingParams.isNotEmpty()) {
+        append("?")
+        var isFirst = true
+        
+        // Show matching parameters (rule-based, highlighted in green)
+        matchingParams.forEach { (param: String, value: String) ->
+            if (!isFirst) append("&")
+            withStyle(style = SpanStyle(color = Color.Green)) {
+                append("$param=$value")
+            }
+            isFirst = false
+        }
+        
+        // Show non-matching parameters with blurred values for privacy
+        nonMatchingParams.forEach { (param: String, value: String) ->
+            if (!isFirst) append("&")
+            append("$param=")
+            withStyle(style = SpanStyle(
+                color = Color.Gray,
+                textDecoration = TextDecoration.LineThrough
+            )) {
+                append("[hidden]")
+            }
+            isFirst = false
+        }
+    }
+    
+    // Show fragment (always visible in simplified approach)
+    if (privacyAnalysis.fragment.isNotEmpty()) {
+        append("#${privacyAnalysis.fragment}")
     }
 }

@@ -56,6 +56,7 @@ import com.gologlu.detracktor.data.CleaningRule
 import com.gologlu.detracktor.data.PatternType
 import com.gologlu.detracktor.data.RulePriority
 import com.gologlu.detracktor.ui.theme.DetracktorTheme
+import com.gologlu.detracktor.utils.RegexValidator
 
 class ConfigActivity : ComponentActivity() {
     
@@ -656,12 +657,15 @@ fun validateRule(hostPattern: String, params: String, patternType: PatternType):
         return "Parameters cannot be empty"
     }
     
-    // Basic validation for regex patterns
+    // Enhanced validation for regex patterns with ReDoS protection
     if (patternType == PatternType.REGEX) {
-        try {
-            Regex(hostPattern)
-        } catch (e: Exception) {
-            return "Invalid regex pattern: ${e.message}"
+        val validation = RegexValidator.validatePattern(hostPattern)
+        if (!validation.isValid) {
+            return if (validation.isReDoSVulnerable) {
+                "Security risk: ${validation.errorMessage}"
+            } else {
+                "Invalid regex pattern: ${validation.errorMessage}"
+            }
         }
     }
     

@@ -7,19 +7,26 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -29,6 +36,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.gologlu.detracktor.data.CleaningResult
 import com.gologlu.detracktor.ui.theme.DetracktorTheme
+import com.gologlu.detracktor.utils.ClipboardContentType
 
 class MainActivity : ComponentActivity() {
     
@@ -255,6 +263,8 @@ fun MainScreen(
 
 @Composable
 fun ClipboardPreviewCard(analysis: com.gologlu.detracktor.data.ClipboardAnalysis) {
+    var showBlurredContent by remember { mutableStateOf(analysis.shouldBlur) }
+    
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -262,36 +272,126 @@ fun ClipboardPreviewCard(analysis: com.gologlu.detracktor.data.ClipboardAnalysis
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Clipboard Content",
-                style = MaterialTheme.typography.titleMedium
-            )
-            
-            if (!analysis.isValidUrl) {
+            // Header with privacy controls
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "Clipboard content is not a valid URI",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Clipboard Content",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                
+                // Privacy controls - show blur toggle if content should be blurred
+                if (analysis.shouldBlur) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Show sensitive content",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Switch(
+                            checked = !showBlurredContent,
+                            onCheckedChange = { showBlurredContent = !it }
+                        )
+                    }
+                }
+            }
+            
+            // Privacy warning for sensitive content
+            if (analysis.hasSensitiveData) {
+                Text(
+                    text = "⚠️ Sensitive content detected",
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.error
                 )
+            }
+            
+            // Content display based on privacy settings
+            if (!analysis.shouldDisplay) {
                 Text(
-                    text = analysis.originalUrl,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.padding(top = 4.dp)
+                    text = "Content hidden for privacy",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            } else if (!analysis.isValidUrl) {
+                // Non-URI content handling
+                if (analysis.contentType == ClipboardContentType.NON_URI) {
+                    Text(
+                        text = "Non-URI content (hidden for privacy)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                } else {
+                    Text(
+                        text = "Clipboard content is not a valid URI",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    
+                    // Show safe preview or blurred content
+                    val contentToShow = if (showBlurredContent && analysis.shouldBlur) {
+                        analysis.safePreview
+                    } else {
+                        analysis.originalUrl
+                    }
+                    
+                    Text(
+                        text = contentToShow,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .then(
+                                if (showBlurredContent && analysis.shouldBlur) 
+                                    Modifier.blur(8.dp) 
+                                else 
+                                    Modifier
+                            )
+                    )
+                }
             } else {
-                // Show URL with highlighted parameters
+                // Valid URL content
                 Text(
                     text = "URL Preview:",
                     style = MaterialTheme.typography.labelMedium
                 )
                 
-                Text(
-                    text = buildUrlWithHighlights(analysis),
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = FontFamily.Monospace,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
+                // Show URL with privacy controls
+                val urlContent = if (showBlurredContent && analysis.shouldBlur) {
+                    // Show safe preview when blurred
+                    Text(
+                        text = analysis.safePreview,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .blur(8.dp)
+                    )
+                } else {
+                    // Show full URL with highlights
+                    Text(
+                        text = buildUrlWithHighlights(analysis),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+                
+                urlContent
+                
+                // Risk factors display
+                if (analysis.riskFactors.isNotEmpty()) {
+                    Text(
+                        text = "Risk factors: ${analysis.riskFactors.joinToString(", ") { it.type.name }}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 
                 if (analysis.hasChanges) {
                     Text(

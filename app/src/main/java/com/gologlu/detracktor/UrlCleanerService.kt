@@ -8,6 +8,8 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import com.gologlu.detracktor.data.*
+import com.gologlu.detracktor.utils.ClipboardContentFilter
+import com.gologlu.detracktor.utils.UrlPrivacyAnalyzer
 import java.net.URL
 
 /**
@@ -21,6 +23,8 @@ class UrlCleanerService(private val context: Context) {
     
     private val configManager = ConfigManager(context)
     private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    private val contentFilter = ClipboardContentFilter()
+    private val privacyAnalyzer = UrlPrivacyAnalyzer()
     
     /**
      * Process an intent that may contain a URL to clean
@@ -95,8 +99,9 @@ class UrlCleanerService(private val context: Context) {
             val config = configManager.loadConfig()
             
             if (config.removeAllParams) {
-                // Remove all query parameters
-                uri.buildUpon().clearQuery().build().toString()
+                // Remove all query parameters while preserving credentials
+                val normalizedUri = normalizeUrlHost(uri)
+                normalizedUri.buildUpon().clearQuery().build().toString()
             } else {
                 // Apply hierarchical rule matching
                 cleanUrlWithHierarchicalRules(uri, configManager.getCompiledRules())
@@ -131,7 +136,7 @@ class UrlCleanerService(private val context: Context) {
     }
     
     /**
-     * Normalize URL host using the host normalizer
+     * Normalize URL host using the host normalizer while preserving embedded credentials
      */
     private fun normalizeUrlHost(uri: Uri): Uri {
         val host = uri.host ?: return uri
@@ -140,9 +145,50 @@ class UrlCleanerService(private val context: Context) {
         val hostNormalizer = configManager.hostNormalizer
         val normalizedHost = hostNormalizer.normalizeHost(host, scheme)
         
-        return uri.buildUpon()
-            .authority(normalizedHost.normalized)
-            .build()
+        // If the normalized host is the same as original, no need to rebuild
+        if (normalizedHost.normalized == host) {
+            return uri
+        }
+        
+        // Preserve embedded credentials (user:pass@) while normalizing only the host part
+        val userInfo = uri.userInfo
+        val port = uri.port
+        
+        // Build a new URL string manually to avoid URI encoding issues
+        val path = uri.path ?: ""
+        val query = uri.query
+        val fragment = uri.fragment
+        
+        val urlBuilder = StringBuilder()
+        urlBuilder.append(scheme).append("://")
+        
+        // Add user info (credentials) if present - don't encode them
+        if (!userInfo.isNullOrEmpty()) {
+            urlBuilder.append(userInfo).append("@")
+        }
+        
+        // Add normalized host
+        urlBuilder.append(normalizedHost.normalized)
+        
+        // Add port if present and not default
+        if (port != -1) {
+            urlBuilder.append(":").append(port)
+        }
+        
+        // Add path
+        urlBuilder.append(path)
+        
+        // Add query
+        if (!query.isNullOrEmpty()) {
+            urlBuilder.append("?").append(query)
+        }
+        
+        // Add fragment
+        if (!fragment.isNullOrEmpty()) {
+            urlBuilder.append("#").append(fragment)
+        }
+        
+        return Uri.parse(urlBuilder.toString())
     }
     
     /**
@@ -363,7 +409,7 @@ class UrlCleanerService(private val context: Context) {
     }
     
     /**
-     * Analyze clipboard content for preview in UI
+     * Analyze clipboard content for preview in UI with privacy filtering
      */
     fun analyzeClipboardContent(): ClipboardAnalysis? {
         val clipData = clipboardManager.primaryClip
@@ -376,6 +422,14 @@ class UrlCleanerService(private val context: Context) {
             return null
         }
         
+        // Get privacy settings from config
+        val config = configManager.loadConfig()
+        val privacySettings = config.privacy
+        
+        // Perform privacy analysis
+        val filteredContent = contentFilter.analyzeAndFilter(clipText, privacySettings)
+        
+        // Handle non-URI content
         if (!isValidHttpUrl(clipText)) {
             return ClipboardAnalysis(
                 originalUrl = clipText,
@@ -384,10 +438,19 @@ class UrlCleanerService(private val context: Context) {
                 hasChanges = false,
                 parametersToRemove = emptyList(),
                 parametersToKeep = emptyList(),
-                matchingRules = emptyList()
+                matchingRules = emptyList(),
+                // Privacy fields
+                contentType = filteredContent.contentType,
+                privacyLevel = filteredContent.privacyLevel,
+                hasSensitiveData = filteredContent.riskFactors.isNotEmpty(),
+                shouldDisplay = filteredContent.shouldDisplay,
+                shouldBlur = filteredContent.shouldBlur,
+                riskFactors = filteredContent.riskFactors,
+                safePreview = filteredContent.filteredContent
             )
         }
         
+        // Process valid URLs
         val cleanedUrl = cleanUrl(clipText)
         val originalUri = Uri.parse(clipText)
         val cleanedUri = Uri.parse(cleanedUrl)
@@ -410,6 +473,11 @@ class UrlCleanerService(private val context: Context) {
             emptyList()
         }
         
+        // Determine if content has sensitive data
+        val hasSensitiveData = filteredContent.riskFactors.isNotEmpty() || 
+                              privacyAnalyzer.hasSensitiveCredentials(clipText) ||
+                              privacyAnalyzer.hasSecretQueryParams(clipText)
+        
         return ClipboardAnalysis(
             originalUrl = clipText,
             cleanedUrl = cleanedUrl,
@@ -417,7 +485,15 @@ class UrlCleanerService(private val context: Context) {
             hasChanges = clipText != cleanedUrl,
             parametersToRemove = parametersToRemove,
             parametersToKeep = parametersToKeep,
-            matchingRules = matchingRules
+            matchingRules = matchingRules,
+            // Privacy fields
+            contentType = filteredContent.contentType,
+            privacyLevel = filteredContent.privacyLevel,
+            hasSensitiveData = hasSensitiveData,
+            shouldDisplay = filteredContent.shouldDisplay,
+            shouldBlur = filteredContent.shouldBlur,
+            riskFactors = filteredContent.riskFactors,
+            safePreview = filteredContent.filteredContent
         )
     }
 }

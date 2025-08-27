@@ -344,9 +344,15 @@ class RuleCompilerTest {
         // Then
         assertNotNull(compiledRule)
         assertEquals(rule, compiledRule.originalRule)
-        // Should return fallback with null compiled pattern and 0 specificity
+        // Should return fallback with null compiled pattern
+        // Note: The RuleCompiler now uses RegexValidator which may reject unsafe patterns
+        // but still returns a valid CompiledRule with fallback values
         assertNull(compiledRule.compiledHostPattern)
-        assertEquals(0, compiledRule.specificity)
+        // Specificity is still calculated based on the rule properties, not regex compilation success
+        assertTrue("Specificity should be greater than 0", compiledRule.specificity > 0)
+        // The param patterns should still be compiled since they are valid
+        // (the host pattern failure doesn't affect param pattern compilation)
+        assertEquals(1, compiledRule.compiledParamPatterns.size)
     }
 
     @Test

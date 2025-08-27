@@ -55,7 +55,9 @@ import androidx.compose.ui.window.Dialog
 import com.gologlu.detracktor.data.CleaningRule
 import com.gologlu.detracktor.data.PatternType
 import com.gologlu.detracktor.data.RulePriority
+import com.gologlu.detracktor.data.SecurityConfig
 import com.gologlu.detracktor.ui.theme.DetracktorTheme
+import com.gologlu.detracktor.utils.RegexValidator
 
 class ConfigActivity : ComponentActivity() {
     
@@ -656,12 +658,25 @@ fun validateRule(hostPattern: String, params: String, patternType: PatternType):
         return "Parameters cannot be empty"
     }
     
-    // Basic validation for regex patterns
+    // Secure validation for regex patterns using RegexValidator
     if (patternType == PatternType.REGEX) {
-        try {
-            Regex(hostPattern)
-        } catch (e: Exception) {
-            return "Invalid regex pattern: ${e.message}"
+        val regexValidator = RegexValidator()
+        val securityConfig = SecurityConfig()
+        
+        val validationResult = regexValidator.validateRegexSafety(hostPattern)
+        
+        if (!validationResult.isSafe) {
+            return when {
+                validationResult.errorMessage != null -> "Invalid regex: ${validationResult.errorMessage}"
+                validationResult.riskLevel == com.gologlu.detracktor.utils.RegexRiskLevel.HIGH -> "⚠️ High ReDoS Risk - pattern may cause performance issues"
+                validationResult.riskLevel == com.gologlu.detracktor.utils.RegexRiskLevel.CRITICAL -> "⚠️ Critical ReDoS Risk - pattern rejected for security"
+                else -> "Unsafe regex pattern detected"
+            }
+        }
+        
+        // Additional validation suggestions
+        if (validationResult.suggestions.isNotEmpty()) {
+            return "Suggestion: ${validationResult.suggestions.first()}"
         }
     }
     
@@ -670,6 +685,11 @@ fun validateRule(hostPattern: String, params: String, patternType: PatternType):
         if (!hostPattern.startsWith("*.") && hostPattern != "*") {
             return "Wildcard patterns should start with '*.' or be just '*'"
         }
+    }
+    
+    // Validate pattern length
+    if (hostPattern.length > 500) {
+        return "Pattern too long (max 500 characters)"
     }
     
     return null

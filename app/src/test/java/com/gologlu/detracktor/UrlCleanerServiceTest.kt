@@ -284,4 +284,63 @@ class UrlCleanerServiceTest {
         assertTrue(result.containsKey("processingTimeMs"))
         assertEquals(testUrl, result["originalUrl"])
     }
+
+    @Test
+    fun testCleanUrl_withEmbeddedCredentials_preservesCredentials() {
+        // Given - URL with embedded credentials and tracking parameters
+        val originalUrl = "https://user:pass@example.com/page?utm_source=test&id=123"
+        
+        // When
+        val result = urlCleanerService.cleanUrl(originalUrl)
+        
+        // Debug output
+        println("Embedded credentials test - Original: $originalUrl")
+        println("Embedded credentials test - Cleaned:  $result")
+        println("Contains user:pass@: ${result.contains("user:pass@")}")
+        println("Contains example.com: ${result.contains("example.com")}")
+        
+        // Then
+        assertNotNull(result)
+        assertTrue("Should preserve embedded credentials", result.contains("user:pass@"))
+        assertTrue("Should preserve host", result.contains("example.com"))
+        assertTrue("Should preserve path", result.contains("/page"))
+        assertTrue("Should start with https://", result.startsWith("https://"))
+    }
+
+    @Test
+    fun testCleanUrl_withCredentialsAndPort_preservesBoth() {
+        // Given - URL with embedded credentials, port, and tracking parameters
+        val originalUrl = "https://api:secret@api.example.com:8443/endpoint?utm_campaign=test&token=abc123"
+        
+        // When
+        val result = urlCleanerService.cleanUrl(originalUrl)
+        
+        // Then
+        assertNotNull(result)
+        assertTrue("Should preserve embedded credentials", result.contains("api:secret@"))
+        assertTrue("Should preserve host", result.contains("api.example.com"))
+        assertTrue("Should preserve port", result.contains(":8443"))
+        assertTrue("Should preserve path", result.contains("/endpoint"))
+        
+        println("Credentials with port test - Original: $originalUrl")
+        println("Credentials with port test - Cleaned:  $result")
+    }
+
+    @Test
+    fun testCleanUrl_withoutCredentials_noCredentialsAdded() {
+        // Given - URL without embedded credentials
+        val originalUrl = "https://example.com/page?utm_source=test&id=123"
+        
+        // When
+        val result = urlCleanerService.cleanUrl(originalUrl)
+        
+        // Then
+        assertNotNull(result)
+        assertFalse("Should not contain @ symbol when no credentials", result.contains("@"))
+        assertTrue("Should preserve host", result.contains("example.com"))
+        assertTrue("Should preserve path", result.contains("/page"))
+        
+        println("No credentials test - Original: $originalUrl")
+        println("No credentials test - Cleaned:  $result")
+    }
 }

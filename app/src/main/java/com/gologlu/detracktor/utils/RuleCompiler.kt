@@ -5,14 +5,18 @@ import com.gologlu.detracktor.data.CompiledRule
 import com.gologlu.detracktor.data.CleaningRule
 import com.gologlu.detracktor.data.PatternType
 import com.gologlu.detracktor.data.PerformanceConfig
+import com.gologlu.detracktor.data.SecurityConfig
 import android.util.LruCache
 import java.util.concurrent.TimeUnit
 
 /**
- * Rule compilation system with pattern caching and performance optimization.
- * Pre-compiles regex patterns and caches them for fast runtime matching.
+ * Rule compilation system with pattern caching, performance optimization, and security validation.
+ * Pre-compiles regex patterns and caches them for fast runtime matching while preventing ReDoS attacks.
  */
-class RuleCompiler(private val config: PerformanceConfig) {
+class RuleCompiler(
+    private val config: PerformanceConfig,
+    private val securityConfig: SecurityConfig = SecurityConfig()
+) {
     
     companion object {
         private const val TAG = "RuleCompiler"
@@ -24,6 +28,9 @@ class RuleCompiler(private val config: PerformanceConfig) {
     
     // LRU cache for individual regex patterns
     private val patternCache: LruCache<String, Regex> = LruCache(config.maxCacheSize * 2)
+    
+    // Regex validator for security
+    private val regexValidator = RegexValidator()
     
     /**
      * Compile a list of rules with caching support.
@@ -168,7 +175,7 @@ class RuleCompiler(private val config: PerformanceConfig) {
         return when (type) {
             PatternType.EXACT -> null
             PatternType.WILDCARD -> compileWildcardPattern(pattern)
-            PatternType.REGEX -> Regex(pattern, RegexOption.IGNORE_CASE)
+            PatternType.REGEX -> compileRegexPatternSafely(pattern)
             PatternType.PATH_PATTERN -> compilePathPattern(pattern)
         }
     }
@@ -215,5 +222,74 @@ class RuleCompiler(private val config: PerformanceConfig) {
             "${rule.hostPattern}:${rule.patternType}:${rule.priority}:${rule.params.joinToString(",")}"
         }
         return ruleHashes.joinToString("|").hashCode().toString()
+    }
+    
+    /**
+     * Safely compile a regex pattern with validation and timeout protection
+     */
+    private fun compileRegexPatternSafely(pattern: String): Regex? {
+        if (!securityConfig.enableRegexValidation) {
+            // If validation is disabled, use direct compilation (not recommended)
+            return try {
+                Regex(pattern, RegexOption.IGNORE_CASE)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to compile regex pattern: $pattern", e)
+                null
+            }
+        }
+        
+        // Validate the pattern for safety
+        val validationResult = regexValidator.validateRegexSafety(pattern)
+        
+        if (!validationResult.isValid) {
+            Log.w(TAG, "Invalid regex pattern: $pattern - ${validationResult.errorMessage}")
+            return null
+        }
+        
+        if (!validationResult.isSafe && securityConfig.rejectHighRiskPatterns) {
+            Log.w(TAG, "Rejected high-risk regex pattern: $pattern - Risk level: ${validationResult.riskLevel}")
+            
+            // Log suggestions for safer alternatives
+            if (validationResult.suggestions.isNotEmpty()) {
+                Log.i(TAG, "Suggestions for safer pattern: ${validationResult.suggestions.joinToString("; ")}")
+            }
+            
+            // Try to create a safer version
+            val saferPattern = regexValidator.createSaferPattern(pattern)
+            if (saferPattern != pattern) {
+                Log.i(TAG, "Attempting to use safer pattern: $saferPattern")
+                return compileRegexPatternSafely(saferPattern)
+            }
+            
+            return null
+        }
+        
+        // Use the validated regex if available, otherwise compile with timeout
+        val compiledRegex = validationResult.compiledRegex ?: 
+            regexValidator.compileWithTimeout(pattern, securityConfig.regexTimeoutMs)
+        
+        if (compiledRegex == null) {
+            Log.w(TAG, "Regex compilation timed out for pattern: $pattern")
+            return null
+        }
+        
+        // Additional performance testing if enabled
+        if (securityConfig.enablePerformanceTesting) {
+            val performanceOk = regexValidator.testRegexPerformance(compiledRegex, securityConfig.regexTimeoutMs)
+            if (!performanceOk) {
+                Log.w(TAG, "Regex failed performance test: $pattern")
+                return null
+            }
+        }
+        
+        Log.d(TAG, "Successfully compiled regex pattern: $pattern (Risk level: ${validationResult.riskLevel})")
+        return compiledRegex
+    }
+    
+    /**
+     * Validate a regex pattern without compiling it
+     */
+    fun validatePattern(pattern: String): RegexValidationResult {
+        return regexValidator.validateRegexSafety(pattern)
     }
 }

@@ -1,499 +1,126 @@
 package com.gologlu.detracktor
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.util.Log
-import android.widget.Toast
-import com.gologlu.detracktor.data.*
-import com.gologlu.detracktor.utils.ClipboardContentFilter
-import com.gologlu.detracktor.utils.UrlPrivacyAnalyzer
-import java.net.URL
+import com.gologlu.detracktor.data.UrlAnalysis
+import com.gologlu.detracktor.utils.RuleEngine
+import com.gologlu.detracktor.utils.UrlAnalyzer
+import android.util.LruCache
 
 /**
- * URL cleaning service with hierarchical pattern matching and host normalization.
+ * Simplified URL cleaning service using the new analysis system.
+ * Replaces the complex privacy analysis with focused URL cleaning functionality.
  */
 class UrlCleanerService(private val context: Context) {
     
-    companion object {
-        private const val TAG = "UrlCleanerService"
-    }
-    
     private val configManager = ConfigManager(context)
-    private val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    private val contentFilter = ClipboardContentFilter()
-    private val privacyAnalyzer = UrlPrivacyAnalyzer()
+    private val ruleEngine = RuleEngine()
+    private val urlAnalyzer = UrlAnalyzer()
+    
+    // Cache compiled rules for performance
+    private var compiledRulesCache: List<RuleEngine.CompiledPattern>? = null
+    private var lastConfigVersion: Int = -1
+    
+    // Cache analysis results for performance
+    private val analysisCache = LruCache<String, UrlAnalysis>(100)
     
     /**
-     * Process an intent that may contain a URL to clean
-     */
-    fun processIntent(intent: Intent) {
-        val url = intent.getStringExtra(Intent.EXTRA_TEXT)
-        if (url != null && isValidHttpUrl(url)) {
-            val result = cleanAndCopyUrl(url)
-            showToast(result, url)
-        } else {
-            // No URL in intent, try clipboard
-            val result = cleanClipboardUrl()
-            showToast(result)
-        }
-    }
-    
-    /**
-     * Clean URL from clipboard and copy back if changed
-     */
-    fun cleanClipboardUrl(): CleaningResult {
-        Log.d(TAG, "cleanClipboardUrl: Starting clipboard access")
-        
-        val clipData = clipboardManager.primaryClip
-        Log.d(TAG, "cleanClipboardUrl: clipData = $clipData, itemCount = ${clipData?.itemCount}")
-        
-        if (clipData == null || clipData.itemCount == 0) {
-            Log.d(TAG, "cleanClipboardUrl: Clipboard is empty or null")
-            return CleaningResult.CLIPBOARD_EMPTY
-        }
-        
-        val clipText = clipData.getItemAt(0).text?.toString()
-        Log.d(TAG, "cleanClipboardUrl: clipText = '$clipText'")
-        
-        if (clipText.isNullOrEmpty()) {
-            Log.d(TAG, "cleanClipboardUrl: Clip text is null or empty")
-            return CleaningResult.CLIPBOARD_EMPTY
-        }
-        
-        if (!isValidHttpUrl(clipText)) {
-            Log.d(TAG, "cleanClipboardUrl: Not a valid HTTP URL")
-            return CleaningResult.NOT_A_URL
-        }
-        
-        Log.d(TAG, "cleanClipboardUrl: Processing valid URL")
-        return cleanAndCopyUrl(clipText)
-    }
-    
-    /**
-     * Clean a URL and copy to clipboard if changed
-     */
-    private fun cleanAndCopyUrl(originalUrl: String): CleaningResult {
-        val cleanedUrl = cleanUrl(originalUrl)
-        
-        return if (cleanedUrl != originalUrl) {
-            copyToClipboard(cleanedUrl)
-            CleaningResult.CLEANED_AND_COPIED
-        } else {
-            CleaningResult.NO_CHANGE
-        }
-    }
-    
-    /**
-     * Main URL cleaning logic with hierarchical matching
+     * Clean a URL by removing tracking parameters based on configured rules.
      */
     fun cleanUrl(url: String): String {
-        if (!isValidHttpUrl(url)) {
-            return url
-        }
-        
-        return try {
-            val uri = Uri.parse(url)
-            val config = configManager.loadConfig()
-            
-            if (config.removeAllParams) {
-                // Remove all query parameters while preserving credentials
-                val normalizedUri = normalizeUrlHost(uri)
-                normalizedUri.buildUpon().clearQuery().build().toString()
-            } else {
-                // Apply hierarchical rule matching
-                cleanUrlWithHierarchicalRules(uri, configManager.getCompiledRules())
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to clean URL: $url", e)
-            // If parsing fails, return original URL
-            url
-        }
+        val analysis = analyzeClipboardContent(url)
+        return analysis.cleanedUrl
     }
     
     /**
-     * Clean URL using hierarchical rule matching with host normalization and composite rule application
+     * Analyze clipboard content and return detailed analysis.
+     * This is the main entry point for URL analysis.
      */
-    private fun cleanUrlWithHierarchicalRules(uri: Uri, compiledRules: List<CompiledRule>): String {
-        val originalHost = uri.host ?: return uri.toString()
-        
-        // Normalize the host for consistent matching
-        val normalizedUri = normalizeUrlHost(uri)
-        val normalizedHost = normalizedUri.host ?: return uri.toString()
-        
-        // Find all matching rules (not just the best one) for composite application
-        val matchingRules = findAllMatchingRules(normalizedHost, compiledRules)
-        
-        return if (matchingRules.isNotEmpty()) {
-            // Apply all matching rules in order of specificity (most specific first)
-            applyCompositeRulesToParameters(normalizedUri, matchingRules)
-        } else {
-            // No matching rules found, return original URL
-            uri.toString()
+    fun analyzeClipboardContent(url: String): UrlAnalysis {
+        // Check cache first
+        val cached = analysisCache.get(url)
+        if (cached != null) {
+            return cached
         }
+        
+        val compiledRules = getCompiledRules()
+        val matchingRuleIds = ruleEngine.matchRules(url, compiledRules)
+        val matchingParameterPatterns = ruleEngine.getMatchingParameterPatterns(url, compiledRules)
+        
+        val analysis = urlAnalyzer.analyzeUrl(url, matchingParameterPatterns)
+        
+        // Update with matching rule IDs
+        val finalAnalysis = analysis.copy(matchingRules = matchingRuleIds)
+        
+        // Cache the result
+        analysisCache.put(url, finalAnalysis)
+        
+        return finalAnalysis
     }
     
     /**
-     * Normalize URL host using the host normalizer while preserving embedded credentials
+     * Check if a URL contains tracking parameters that can be cleaned.
      */
-    private fun normalizeUrlHost(uri: Uri): Uri {
-        val host = uri.host ?: return uri
-        val scheme = uri.scheme ?: "https"
-        
-        val hostNormalizer = configManager.hostNormalizer
-        val normalizedHost = hostNormalizer.normalizeHost(host, scheme)
-        
-        // If the normalized host is the same as original, no need to rebuild
-        if (normalizedHost.normalized == host) {
-            return uri
-        }
-        
-        // Preserve embedded credentials (user:pass@) while normalizing only the host part
-        val userInfo = uri.userInfo
-        val port = uri.port
-        
-        // Build a new URL string manually to avoid URI encoding issues
-        val path = uri.path ?: ""
-        val query = uri.query
-        val fragment = uri.fragment
-        
-        val urlBuilder = StringBuilder()
-        urlBuilder.append(scheme).append("://")
-        
-        // Add user info (credentials) if present - don't encode them
-        if (!userInfo.isNullOrEmpty()) {
-            urlBuilder.append(userInfo).append("@")
-        }
-        
-        // Add normalized host
-        urlBuilder.append(normalizedHost.normalized)
-        
-        // Add port if present and not default
-        if (port != -1) {
-            urlBuilder.append(":").append(port)
-        }
-        
-        // Add path
-        urlBuilder.append(path)
-        
-        // Add query
-        if (!query.isNullOrEmpty()) {
-            urlBuilder.append("?").append(query)
-        }
-        
-        // Add fragment
-        if (!fragment.isNullOrEmpty()) {
-            urlBuilder.append("#").append(fragment)
-        }
-        
-        return Uri.parse(urlBuilder.toString())
+    fun hasTrackingParameters(url: String): Boolean {
+        val analysis = analyzeClipboardContent(url)
+        return analysis.originalUrl != analysis.cleanedUrl
     }
     
     /**
-     * Find all matching rules for composite rule application
+     * Check if a URL contains embedded credentials.
      */
-    private fun findAllMatchingRules(normalizedHost: String, rules: List<CompiledRule>): List<CompiledRule> {
-        val matchingRules = mutableListOf<CompiledRule>()
-        
-        // Rules are already sorted by specificity (most specific first)
-        for (rule in rules) {
-            if (!rule.originalRule.enabled) continue
-            
-            if (matchesCompiledRule(normalizedHost, rule)) {
-                matchingRules.add(rule)
-                Log.d(TAG, "Matched rule: ${rule.originalRule.hostPattern} (specificity: ${rule.specificity})")
-            }
-        }
-        
-        Log.d(TAG, "Found ${matchingRules.size} matching rules for host: $normalizedHost")
-        return matchingRules
-    }
-    
-    
-    
-    /**
-     * Check if a host matches a compiled rule
-     */
-    fun matchesCompiledRule(host: String, rule: CompiledRule): Boolean {
-        return when (rule.originalRule.patternType) {
-            PatternType.EXACT -> {
-                host.equals(rule.normalizedHostPattern, ignoreCase = true)
-            }
-            PatternType.WILDCARD -> {
-                rule.compiledHostPattern?.matches(host) ?: false
-            }
-            PatternType.REGEX -> {
-                rule.compiledHostPattern?.matches(host) ?: false
-            }
-            PatternType.PATH_PATTERN -> {
-                // PATH_PATTERN requires full URL matching - this method only handles host matching
-                // For PATH_PATTERN rules, use matchesCompiledRuleWithPath instead
-                rule.compiledHostPattern?.matches(host) ?: false
-            }
-        }
+    fun hasEmbeddedCredentials(url: String): Boolean {
+        val analysis = analyzeClipboardContent(url)
+        return analysis.hasEmbeddedCredentials
     }
     
     /**
-     * Check if a full URL matches a compiled rule (supports PATH_PATTERN)
+     * Get compiled rules, using cache when possible.
      */
-    fun matchesCompiledRuleWithPath(fullUrl: String, rule: CompiledRule): Boolean {
-        return when (rule.originalRule.patternType) {
-            PatternType.EXACT, PatternType.WILDCARD, PatternType.REGEX -> {
-                // For non-path patterns, extract host and use standard matching
-                val uri = Uri.parse(fullUrl)
-                val host = uri.host ?: return false
-                matchesCompiledRule(host, rule)
-            }
-            PatternType.PATH_PATTERN -> {
-                // For path patterns, match against the full URL
-                rule.compiledHostPattern?.matches(fullUrl) ?: false
-            }
-        }
-    }
-    
-    /**
-     * Apply composite rules to URL parameters (combines all matching rules)
-     */
-    private fun applyCompositeRulesToParameters(uri: Uri, rules: List<CompiledRule>): String {
-        val queryParams = uri.queryParameterNames.toMutableSet()
-        val paramsToRemove = mutableSetOf<String>()
-        val appliedRules = mutableListOf<String>()
-        
-        // Apply all matching rules in order of specificity
-        for (rule in rules) {
-            val ruleParamsToRemove = mutableSetOf<String>()
-            
-            // Use compiled parameter patterns for efficient matching
-            for (paramPattern in rule.compiledParamPatterns) {
-                val matchingParams = queryParams.filter { param ->
-                    paramPattern.matches(param)
-                }
-                ruleParamsToRemove.addAll(matchingParams)
-            }
-            
-            // Also handle simple string patterns that weren't compiled to regex
-            for (paramPattern in rule.originalRule.params) {
-                if (paramPattern.endsWith("*")) {
-                    // Wildcard pattern
-                    val prefix = paramPattern.dropLast(1)
-                    val matchingParams = queryParams.filter { it.startsWith(prefix) }
-                    ruleParamsToRemove.addAll(matchingParams)
-                } else {
-                    // Exact match
-                    if (queryParams.contains(paramPattern)) {
-                        ruleParamsToRemove.add(paramPattern)
-                    }
-                }
-            }
-            
-            if (ruleParamsToRemove.isNotEmpty()) {
-                paramsToRemove.addAll(ruleParamsToRemove)
-                appliedRules.add(rule.originalRule.hostPattern)
-                Log.d(TAG, "Rule ${rule.originalRule.hostPattern} removing: ${ruleParamsToRemove.joinToString(", ")}")
-            }
-        }
-        
-        // Build new URI without the specified parameters
-        val builder = uri.buildUpon().clearQuery()
-        for (param in queryParams) {
-            if (!paramsToRemove.contains(param)) {
-                val values = uri.getQueryParameters(param)
-                for (value in values) {
-                    builder.appendQueryParameter(param, value)
-                }
-            }
-        }
-        
-        val result = builder.build().toString()
-        
-        if (paramsToRemove.isNotEmpty()) {
-            Log.d(TAG, "Composite rules removed parameters: ${paramsToRemove.joinToString(", ")} using rules: ${appliedRules.joinToString(", ")}")
-        }
-        
-        return result
-    }
-    
-    
-    
-    /**
-     * Validate if string is a valid HTTP/HTTPS URL
-     */
-    private fun isValidHttpUrl(url: String): Boolean {
-        return try {
-            val parsedUrl = URL(url)
-            parsedUrl.protocol == "http" || parsedUrl.protocol == "https"
-        } catch (e: Exception) {
-            false
-        }
-    }
-    
-    /**
-     * Copy text to clipboard
-     */
-    private fun copyToClipboard(text: String) {
-        val clip = ClipData.newPlainText("Cleaned URL", text)
-        clipboardManager.setPrimaryClip(clip)
-    }
-    
-    /**
-     * Show appropriate toast message based on result
-     */
-    private fun showToast(result: CleaningResult, originalUrl: String? = null) {
-        val message = when (result) {
-            CleaningResult.CLIPBOARD_EMPTY -> "Clipboard empty"
-            CleaningResult.NOT_A_URL -> "Not a URL"
-            CleaningResult.NO_CHANGE -> "No change"
-            CleaningResult.CLEANED_AND_COPIED -> "Cleaned → copied"
-        }
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-    }
-    
-    /**
-     * Get service statistics for debugging and monitoring
-     */
-    fun getServiceStats(): Map<String, Any> {
-        val configStats = configManager.getConfigStats()
-        val compiledRules = configManager.getCompiledRules()
-        
-        return mapOf(
-            "configStats" to configStats,
-            "compiledRulesCount" to compiledRules.size,
-            "enabledRulesCount" to compiledRules.count { it.originalRule.enabled },
-            "rulesByPriority" to compiledRules.groupBy { it.originalRule.priority }.mapValues { it.value.size },
-            "rulesByPatternType" to compiledRules.groupBy { it.originalRule.patternType }.mapValues { it.value.size }
-        )
-    }
-    
-    /**
-     * Test URL cleaning with detailed logging (for debugging)
-     */
-    fun testUrlCleaning(url: String): Map<String, Any> {
-        val startTime = System.currentTimeMillis()
-        val originalUrl = url
-        val cleanedUrl = cleanUrl(url)
-        val endTime = System.currentTimeMillis()
-        
-        val uri = Uri.parse(url)
-        val host = uri.host ?: ""
-        val normalizedHost = if (host.isNotEmpty()) {
-            configManager.hostNormalizer.normalizeHost(host).normalized
-        } else {
-            ""
-        }
-        
-        val matchingRule = if (normalizedHost.isNotEmpty()) {
-            findAllMatchingRules(normalizedHost, configManager.getCompiledRules()).firstOrNull()
-        } else {
-            null
-        }
-        
-        return mapOf(
-            "originalUrl" to originalUrl,
-            "cleanedUrl" to cleanedUrl,
-            "changed" to (originalUrl != cleanedUrl),
-            "processingTimeMs" to (endTime - startTime),
-            "originalHost" to host,
-            "normalizedHost" to normalizedHost,
-            "matchingRule" to (matchingRule?.originalRule?.hostPattern ?: "none"),
-            "ruleSpecificity" to (matchingRule?.specificity ?: 0),
-            "removedParams" to getRemovedParameters(uri, Uri.parse(cleanedUrl))
-        )
-    }
-    
-    private fun getRemovedParameters(originalUri: Uri, cleanedUri: Uri): List<String> {
-        val originalParams = originalUri.queryParameterNames
-        val cleanedParams = cleanedUri.queryParameterNames
-        return originalParams.subtract(cleanedParams).toList()
-    }
-    
-    /**
-     * Analyze clipboard content for preview in UI with privacy filtering
-     */
-    fun analyzeClipboardContent(): ClipboardAnalysis? {
-        val clipData = clipboardManager.primaryClip
-        if (clipData == null || clipData.itemCount == 0) {
-            return null
-        }
-        
-        val clipText = clipData.getItemAt(0).text?.toString()
-        if (clipText.isNullOrEmpty()) {
-            return null
-        }
-        
-        // Get privacy settings from config
+    private fun getCompiledRules(): List<RuleEngine.CompiledPattern> {
         val config = configManager.loadConfig()
-        val privacySettings = config.privacy
         
-        // Perform privacy analysis
-        val filteredContent = contentFilter.analyzeAndFilter(clipText, privacySettings)
-        
-        // Handle non-URI content
-        if (!isValidHttpUrl(clipText)) {
-            return ClipboardAnalysis(
-                originalUrl = clipText,
-                cleanedUrl = clipText,
-                isValidUrl = false,
-                hasChanges = false,
-                parametersToRemove = emptyList(),
-                parametersToKeep = emptyList(),
-                matchingRules = emptyList(),
-                // Privacy fields
-                contentType = filteredContent.contentType,
-                privacyLevel = filteredContent.privacyLevel,
-                hasSensitiveData = filteredContent.riskFactors.isNotEmpty(),
-                shouldDisplay = filteredContent.shouldDisplay,
-                shouldBlur = filteredContent.shouldBlur,
-                riskFactors = filteredContent.riskFactors,
-                safePreview = filteredContent.filteredContent
-            )
+        // Check if we need to recompile rules
+        if (compiledRulesCache == null || lastConfigVersion != config.version) {
+            compiledRulesCache = ruleEngine.compileRules(config.rules)
+            lastConfigVersion = config.version
+            
+            // Clear analysis cache when rules change
+            analysisCache.evictAll()
         }
         
-        // Process valid URLs
-        val cleanedUrl = cleanUrl(clipText)
-        val originalUri = Uri.parse(clipText)
-        val cleanedUri = Uri.parse(cleanedUrl)
+        return compiledRulesCache ?: emptyList()
+    }
+    
+    /**
+     * Clear all caches (useful when configuration changes).
+     */
+    fun clearCaches() {
+        compiledRulesCache = null
+        analysisCache.evictAll()
+        lastConfigVersion = -1
+    }
+    
+    /**
+     * Get statistics about the service state.
+     */
+    fun getServiceStats(): ServiceStats {
+        val config = configManager.loadConfig()
+        val enabledRules = config.rules.count { it.enabled }
+        val totalRules = config.rules.size
+        val cacheSize = analysisCache.size()
         
-        val parametersToRemove = getRemovedParameters(originalUri, cleanedUri)
-        val parametersToKeep = cleanedUri.queryParameterNames.toList()
-        
-        // Find all matching rules for display
-        val normalizedHost = if (originalUri.host != null) {
-            configManager.hostNormalizer.normalizeHost(originalUri.host!!).normalized
-        } else {
-            ""
-        }
-        
-        val matchingRules = if (normalizedHost.isNotEmpty()) {
-            findAllMatchingRules(normalizedHost, configManager.getCompiledRules()).map { rule ->
-                rule.originalRule.description ?: rule.originalRule.hostPattern
-            }
-        } else {
-            emptyList()
-        }
-        
-        // Determine if content has sensitive data
-        val hasSensitiveData = filteredContent.riskFactors.isNotEmpty() || 
-                              privacyAnalyzer.hasSensitiveCredentials(clipText) ||
-                              privacyAnalyzer.hasSecretQueryParams(clipText)
-        
-        return ClipboardAnalysis(
-            originalUrl = clipText,
-            cleanedUrl = cleanedUrl,
-            isValidUrl = true,
-            hasChanges = clipText != cleanedUrl,
-            parametersToRemove = parametersToRemove,
-            parametersToKeep = parametersToKeep,
-            matchingRules = matchingRules,
-            // Privacy fields
-            contentType = filteredContent.contentType,
-            privacyLevel = filteredContent.privacyLevel,
-            hasSensitiveData = hasSensitiveData,
-            shouldDisplay = filteredContent.shouldDisplay,
-            shouldBlur = filteredContent.shouldBlur,
-            riskFactors = filteredContent.riskFactors,
-            safePreview = filteredContent.filteredContent
+        return ServiceStats(
+            totalRules = totalRules,
+            enabledRules = enabledRules,
+            cacheSize = cacheSize,
+            removeAllParams = config.removeAllParams
         )
     }
+    
+    data class ServiceStats(
+        val totalRules: Int,
+        val enabledRules: Int,
+        val cacheSize: Int,
+        val removeAllParams: Boolean
+    )
 }

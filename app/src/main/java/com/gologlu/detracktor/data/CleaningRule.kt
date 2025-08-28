@@ -1,14 +1,14 @@
 package com.gologlu.detracktor.data
 
 /**
- * Cleaning rule with priority and compiled patterns for hierarchical matching.
- * Simplified version without backwards compatibility complexity.
+ * Simplified cleaning rule with regex pattern and numeric priority.
+ * Replaces the over-engineered PatternType + RulePriority system.
  */
 data class CleaningRule(
-    val hostPattern: String,
-    val params: List<String>,
-    val priority: RulePriority,
-    val patternType: PatternType = PatternType.WILDCARD,
+    val id: String,
+    val hostPattern: String,  // Always treated as regex
+    val parameterPatterns: List<String>,  // Parameter names/patterns to remove
+    val priority: Int,  // Lower number = higher priority
     val enabled: Boolean = true,
     val description: String? = null
 )

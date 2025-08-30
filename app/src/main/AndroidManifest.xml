@@ -32,14 +32,6 @@
             </intent-filter>
         </activity>
         
-        <!-- Configuration Activity -->
-        <activity
-            android:name=".ConfigActivity"
-            android:exported="false"
-            android:label="Settings"
-            android:theme="@style/Theme.Detracktor"
-            android:parentActivityName=".MainActivity" />
-        
         
     </application>
 

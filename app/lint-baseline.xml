@@ -2,223 +2,65 @@
 <issues format="6" by="lint 8.12.1" type="baseline" client="gradle" dependencies="false" name="AGP (8.12.1)" variant="all" version="8.12.1">
 
     <issue
-        id="ProtectedPermissions"
-        message="Permission is only granted to system apps"
-        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.BIND_QUICK_SETTINGS_TILE&quot; />"
-        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="6"
-            column="22"/>
-    </issue>
-
-    <issue
         id="RedundantLabel"
         message="Redundant label can be removed"
         errorLine1="            android:label=&quot;@string/app_name&quot;"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/AndroidManifest.xml"
-            line="22"
+            line="19"
             column="13"/>
     </issue>
 
     <issue
         id="AndroidGradlePluginVersion"
-        message="A newer version of Gradle than 8.13 is available: 8.14.3"
-        errorLine1="distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="A newer version of com.android.application than 8.12.1 is available: 8.12.2"
+        errorLine1="agp = &quot;8.12.1&quot;"
+        errorLine2="      ~~~~~~~~">
         <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/wrapper/gradle-wrapper.properties"
-            line="4"
-            column="17"/>
+            file="$HOME/repos/projects/android/Detracktor refactor/gradle/libs.versions.toml"
+            line="2"
+            column="7"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of com.android.tools:desugar_jdk_libs than 2.0.4 is available: 2.1.5"
-        errorLine1="    coreLibraryDesugaring(&quot;com.android.tools:desugar_jdk_libs:2.0.4&quot;)"
-        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle.kts"
-            line="68"
-            column="27"/>
-    </issue>
-
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.core:core-ktx than 1.10.1 is available: 1.17.0"
-        errorLine1="coreKtx = &quot;1.10.1&quot;"
-        errorLine2="          ~~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="4"
-            column="11"/>
-    </issue>
-
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.test.ext:junit than 1.1.5 is available: 1.3.0"
-        errorLine1="junitVersion = &quot;1.1.5&quot;"
-        errorLine2="               ~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="6"
-            column="16"/>
-    </issue>
-
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.test.espresso:espresso-core than 3.5.1 is available: 3.7.0"
-        errorLine1="espressoCore = &quot;3.5.1&quot;"
-        errorLine2="               ~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="7"
-            column="16"/>
-    </issue>
-
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.6.1 is available: 2.9.2"
-        errorLine1="lifecycleRuntimeKtx = &quot;2.6.1&quot;"
+        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.9.2 is available: 2.9.3"
+        errorLine1="lifecycleRuntimeKtx = &quot;2.9.2&quot;"
         errorLine2="                      ~~~~~~~">
         <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
+            file="$HOME/repos/projects/android/Detracktor refactor/gradle/libs.versions.toml"
             line="8"
             column="23"/>
     </issue>
 
     <issue
         id="GradleDependency"
-        message="A newer version of androidx.activity:activity-compose than 1.8.0 is available: 1.10.1"
-        errorLine1="activityCompose = &quot;1.8.0&quot;"
-        errorLine2="                  ~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="9"
-            column="19"/>
-    </issue>
-
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.compose:compose-bom than 2024.09.00 is available: 2025.08.00"
-        errorLine1="composeBom = &quot;2024.09.00&quot;"
+        message="A newer version of androidx.compose:compose-bom than 2025.08.00 is available: 2025.08.01"
+        errorLine1="composeBom = &quot;2025.08.00&quot;"
         errorLine2="             ~~~~~~~~~~~~">
         <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
+            file="$HOME/repos/projects/android/Detracktor refactor/gradle/libs.versions.toml"
             line="10"
             column="14"/>
     </issue>
 
     <issue
-        id="GradleDependency"
-        message="A newer version of androidx.test:core than 1.5.0 is available: 1.7.0"
-        errorLine1="androidx-test-core = &quot;1.5.0&quot;"
-        errorLine2="                     ~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="15"
-            column="22"/>
-    </issue>
-
-    <issue
         id="NewerVersionAvailable"
-        message="A newer version of com.ibm.icu:icu4j than 72.1 is available: 77.1"
-        errorLine1="    implementation(&quot;com.ibm.icu:icu4j:72.1&quot;)  // IDN and internationalization support"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle.kts"
-            line="63"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.apache.commons:commons-lang3 than 3.12.0 is available: 3.18.0"
-        errorLine1="    implementation(&quot;org.apache.commons:commons-lang3:3.12.0&quot;)  // Enhanced regex and pattern matching"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle.kts"
-            line="64"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.github.ben-manes.caffeine:caffeine than 3.1.8 is available: 3.2.2"
-        errorLine1="    implementation(&quot;com.github.ben-manes.caffeine:caffeine:3.1.8&quot;)  // LRU Cache for performance optimization"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle.kts"
-            line="65"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.junit.jupiter:junit-jupiter than 5.9.3 is available: 5.13.4"
-        errorLine1="    testImplementation(&quot;org.junit.jupiter:junit-jupiter:5.9.3&quot;)  // JUnit 5 for advanced testing"
-        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle.kts"
-            line="73"
-            column="24"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.jetbrains.kotlin.android than 2.0.21 is available: 2.2.10"
-        errorLine1="kotlin = &quot;2.0.21&quot;"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="3"
-            column="10"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.jetbrains.kotlin.plugin.compose than 2.0.21 is available: 2.2.10"
-        errorLine1="kotlin = &quot;2.0.21&quot;"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="3"
-            column="10"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.google.code.gson:gson than 2.10.1 is available: 2.13.1"
-        errorLine1="gson = &quot;2.10.1&quot;"
-        errorLine2="       ~~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="11"
-            column="8"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.mockito:mockito-core than 5.7.0 is available: 5.19.0"
-        errorLine1="mockito = &quot;5.7.0&quot;"
-        errorLine2="          ~~~~~~~">
-        <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
-            line="13"
-            column="11"/>
-    </issue>
-
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.robolectric:robolectric than 4.11.1 is available: 4.15.1"
-        errorLine1="robolectric = &quot;4.11.1&quot;"
+        message="A newer version of org.robolectric:robolectric than 4.15.1 is available: 4.16"
+        errorLine1="robolectric = &quot;4.15.1&quot;"
         errorLine2="              ~~~~~~~~">
         <location
-            file="$HOME/repos/projects/android/Detracktor/gradle/libs.versions.toml"
+            file="$HOME/repos/projects/android/Detracktor refactor/gradle/libs.versions.toml"
             line="14"
             column="15"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 29. Merge all the resources in this folder into `mipmap-anydpi`.">
+        <location
+            file="src/main/res/mipmap-anydpi-v26"/>
     </issue>
 
     <issue
@@ -299,79 +141,93 @@
     </issue>
 
     <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="            val uri = Uri.parse(url)"
-        errorLine2="                      ~~~~~~~~~~~~~~">
+        id="UnusedResources"
+        message="The resource `R.color.splash_background` appears to be unused"
+        errorLine1="    &lt;color name=&quot;splash_background&quot;>#FF7A1A&lt;/color>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/gologlu/detracktor/UrlCleanerService.kt"
-            line="80"
-            column="23"/>
+            file="src/main/res/values/colors.xml"
+            line="10"
+            column="12"/>
     </issue>
 
     <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="        val uri = Uri.parse(url)"
-        errorLine2="                  ~~~~~~~~~~~~~~">
+        id="UnusedResources"
+        message="The resource `R.mipmap.ic_launcher` appears to be unused">
         <location
-            file="src/main/java/com/gologlu/detracktor/UrlCleanerService.kt"
-            line="287"
-            column="19"/>
+            file="src/main/res/mipmap-hdpi/ic_launcher.webp"/>
     </issue>
 
     <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="            &quot;removedParams&quot; to getRemovedParameters(uri, Uri.parse(cleanedUrl))"
-        errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~">
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_launcher_background` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
         <location
-            file="src/main/java/com/gologlu/detracktor/UrlCleanerService.kt"
-            line="310"
-            column="58"/>
+            file="src/main/res/drawable/ic_launcher_background.xml"
+            line="2"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_launcher_foreground` appears to be unused"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_launcher_foreground.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.mipmap.ic_launcher_round` appears to be unused">
+        <location
+            file="src/main/res/mipmap-hdpi/ic_launcher_round.webp"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.widget_description` appears to be unused"
+        errorLine1="    &lt;string name=&quot;widget_description&quot;>Clean URLs by removing tracking parameters&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="3"
+            column="13"/>
     </issue>
 
     <issue
         id="UseTomlInstead"
         message="Use version catalog instead"
-        errorLine1="    implementation(&quot;com.ibm.icu:icu4j:72.1&quot;)  // IDN and internationalization support"
+        errorLine1="    implementation(&quot;com.ibm.icu:icu4j:77.1&quot;)  // IDN and internationalization support"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle.kts"
-            line="63"
+            line="88"
             column="20"/>
     </issue>
 
     <issue
         id="UseTomlInstead"
         message="Use version catalog instead"
-        errorLine1="    implementation(&quot;org.apache.commons:commons-lang3:3.12.0&quot;)  // Enhanced regex and pattern matching"
+        errorLine1="    implementation(&quot;org.apache.commons:commons-lang3:3.18.0&quot;)  // Enhanced regex and pattern matching"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle.kts"
-            line="64"
+            line="89"
             column="20"/>
     </issue>
 
     <issue
         id="UseTomlInstead"
         message="Use version catalog instead"
-        errorLine1="    implementation(&quot;com.github.ben-manes.caffeine:caffeine:3.1.8&quot;)  // LRU Cache for performance optimization"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle.kts"
-            line="65"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="UseTomlInstead"
-        message="Use version catalog instead"
-        errorLine1="    coreLibraryDesugaring(&quot;com.android.tools:desugar_jdk_libs:2.0.4&quot;)"
+        errorLine1="    coreLibraryDesugaring(&quot;com.android.tools:desugar_jdk_libs:2.1.5&quot;)"
         errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle.kts"
-            line="68"
+            line="93"
             column="27"/>
     </issue>
 
@@ -382,30 +238,8 @@
         errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="build.gradle.kts"
-            line="72"
+            line="97"
             column="24"/>
-    </issue>
-
-    <issue
-        id="UseTomlInstead"
-        message="Use version catalog instead"
-        errorLine1="    testImplementation(&quot;org.junit.jupiter:junit-jupiter:5.9.3&quot;)  // JUnit 5 for advanced testing"
-        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle.kts"
-            line="73"
-            column="24"/>
-    </issue>
-
-    <issue
-        id="HardcodedText"
-        message="Hardcoded string &quot;Clean URL&quot;, should use `@string` resource"
-        errorLine1="        android:text=&quot;Clean URL&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/widget_layout.xml"
-            line="13"
-            column="9"/>
     </issue>
 
 </issues>

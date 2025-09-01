@@ -95,9 +95,9 @@ value class Url private constructor(val parts: UrlParts) : IUrl {
          * @param raw The raw URL string to parse and validate
          * @return A [DomainResult] containing either a valid [Url] or a [ValidationError.InvalidUrl]
          */
-        context(pm: UrlParser)
+        context(pars: UrlParser)
         fun from(raw: MaybeUrl): DomainResult<Url> {
-            return pm.parse(raw).flatMap { parts: UrlParts ->
+            return pars.parse(raw).flatMap { parts: UrlParts ->
                 // Early validation for required components
                 when {
                     parts.scheme == null -> DomainResult.failure(

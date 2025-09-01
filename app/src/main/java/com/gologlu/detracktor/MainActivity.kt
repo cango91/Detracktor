@@ -18,7 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.gologlu.detracktor.presentation.ui.theme.DetracktorTheme
+import com.gologlu.detracktor.runtime.android.presentation.ui.theme.DetracktorTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

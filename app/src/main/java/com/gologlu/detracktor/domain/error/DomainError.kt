@@ -148,3 +148,14 @@ inline fun <T> DomainResult<T>.onFailure(f: (DomainError) -> Unit): DomainResult
     }
     return this
 }
+
+/**
+ * Returns the exception that would be thrown by getOrThrow() or null if this is a success.
+ * This provides access to the underlying error without throwing an exception.
+ */
+fun <T> DomainResult<T>.exceptionOrNull(): DomainException? {
+    return when (this) {
+        is DomainResult.Success -> null
+        is DomainResult.Failure -> DomainException(error)
+    }
+}

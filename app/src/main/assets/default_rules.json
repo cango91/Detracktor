@@ -1,149 +1,19 @@
 {
-  "version": 2,
-  "removeAllParams": false,
-  "rules": [
+  "version": 1,
+  "sites": [
     {
-      "hostPattern": "youtu.be",
-      "params": ["si", "feature", "t", "list", "index"],
-      "priority": "EXACT_HOST",
-      "patternType": "EXACT",
-      "enabled": true,
-      "description": "YouTube tracking and navigation parameters"
-    },
-    {
-      "hostPattern": "youtube.com",
-      "params": ["si", "feature", "t", "list", "index"],
-      "priority": "EXACT_HOST",
-      "patternType": "EXACT",
-      "enabled": true,
-      "description": "YouTube tracking and navigation parameters"
-    },
-    {
-      "hostPattern": "*.youtube.com",
-      "params": ["si", "feature", "t", "list", "index"],
-      "priority": "SUBDOMAIN_WILDCARD",
-      "patternType": "WILDCARD",
-      "enabled": true,
-      "description": "YouTube tracking and navigation parameters (subdomains)"
-    },
-    {
-      "hostPattern": "twitter.com",
-      "params": ["s", "t", "ref_src", "ref_url"],
-      "priority": "EXACT_HOST",
-      "patternType": "EXACT",
-      "enabled": true,
-      "description": "Twitter/X tracking parameters"
-    },
-    {
-      "hostPattern": "*.twitter.com",
-      "params": ["s", "t", "ref_src", "ref_url"],
-      "priority": "SUBDOMAIN_WILDCARD",
-      "patternType": "WILDCARD",
-      "enabled": true,
-      "description": "Twitter/X tracking parameters (subdomains)"
-    },
-    {
-      "hostPattern": "x.com",
-      "params": ["s", "t", "ref_src", "ref_url"],
-      "priority": "EXACT_HOST",
-      "patternType": "EXACT",
-      "enabled": true,
-      "description": "X (formerly Twitter) tracking parameters"
-    },
-    {
-      "hostPattern": "*.x.com",
-      "params": ["s", "t", "ref_src", "ref_url"],
-      "priority": "SUBDOMAIN_WILDCARD",
-      "patternType": "WILDCARD",
-      "enabled": true,
-      "description": "X (formerly Twitter) tracking parameters (subdomains)"
-    },
-    {
-      "hostPattern": "facebook.com",
-      "params": ["fbclid", "ref", "source"],
-      "priority": "EXACT_HOST",
-      "patternType": "EXACT",
-      "enabled": true,
-      "description": "Facebook tracking parameters"
-    },
-    {
-      "hostPattern": "*.facebook.com",
-      "params": ["fbclid", "ref", "source"],
-      "priority": "SUBDOMAIN_WILDCARD",
-      "patternType": "WILDCARD",
-      "enabled": true,
-      "description": "Facebook tracking parameters (subdomains)"
-    },
-    {
-      "hostPattern": "instagram.com",
-      "params": ["igsh", "igshid", "utm_*"],
-      "priority": "EXACT_HOST",
-      "patternType": "EXACT",
-      "enabled": true,
-      "description": "Instagram tracking parameters"
-    },
-    {
-      "hostPattern": "*.instagram.com",
-      "params": ["igsh", "igshid", "utm_*"],
-      "priority": "SUBDOMAIN_WILDCARD",
-      "patternType": "WILDCARD",
-      "enabled": true,
-      "description": "Instagram tracking parameters (subdomains)"
-    },
-    {
-      "hostPattern": "amazon.com",
-      "params": ["ref", "ref_", "tag", "linkCode", "camp", "creative", "creativeASIN"],
-      "priority": "EXACT_HOST",
-      "patternType": "EXACT",
-      "enabled": true,
-      "description": "Amazon affiliate and tracking parameters"
-    },
-    {
-      "hostPattern": "*.amazon.com",
-      "params": ["ref", "ref_", "tag", "linkCode", "camp", "creative", "creativeASIN"],
-      "priority": "SUBDOMAIN_WILDCARD",
-      "patternType": "WILDCARD",
-      "enabled": true,
-      "description": "Amazon affiliate and tracking parameters (subdomains)"
-    },
-    {
-      "hostPattern": "google.com",
-      "params": ["gclid", "gclsrc", "dclid", "utm_*"],
-      "priority": "EXACT_HOST",
-      "patternType": "EXACT",
-      "enabled": true,
-      "description": "Google Ads and tracking parameters"
-    },
-    {
-      "hostPattern": "*.google.com",
-      "params": ["gclid", "gclsrc", "dclid", "utm_*"],
-      "priority": "SUBDOMAIN_WILDCARD",
-      "patternType": "WILDCARD",
-      "enabled": true,
-      "description": "Google Ads and tracking parameters (subdomains)"
-    },
-    {
-      "hostPattern": "*",
-      "params": ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "msclkid", "_ga", "_gl"],
-      "priority": "GLOBAL_WILDCARD",
-      "patternType": "WILDCARD",
-      "enabled": true,
-      "description": "Common tracking parameters across all sites"
+      "when": {
+        "host": {
+          "domains": ["youtube.com", "youtu.be"],
+          "subdomains": ["www", "m", ""]
+        }
+      },
+      "then": {
+        "remove": ["utm_*", "gclid", "fbclid"]
+      },
+      "metadata": {
+        "description": "Standard trackers for YouTube"
+      }
     }
-  ],
-  "hostNormalization": {
-    "enableCaseNormalization": true,
-    "enablePortNormalization": true,
-    "enableIDNConversion": true,
-    "defaultPorts": {
-      "http": 80,
-      "https": 443,
-      "ftp": 21
-    }
-  },
-  "performance": {
-    "enablePatternCaching": true,
-    "maxCacheSize": 1000,
-    "recompileOnConfigChange": true
-  }
+  ]
 }

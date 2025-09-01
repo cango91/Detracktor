@@ -1,4 +1,4 @@
-package com.gologlu.detracktor.presentation.ui.theme
+package com.gologlu.detracktor.runtime.android.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

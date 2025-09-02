@@ -6,7 +6,6 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.google.gson.JsonPrimitive
 import com.gologlu.detracktor.application.error.AppResult
 import com.gologlu.detracktor.application.error.ConfigInvalidFieldError
 import com.gologlu.detracktor.application.error.ConfigParseError
@@ -29,7 +28,7 @@ import java.io.FileWriter
 class AndroidSettingsRepository(
     private val context: Context,
     private val gson: Gson = Gson(),
-    private val defaultsAssetName: String = "default_rules.json",
+    private val defaultsAssetName: String = "default_settings.json",
     private val userFileName: String = "user_settings.json"
 ) : SettingsRepository {
 
@@ -127,10 +126,8 @@ class AndroidSettingsRepository(
         }
         val sitesArray = getArray(root, "sites") ?: throw AppConfigException(ConfigInvalidFieldError("sites", "sites array is required"))
         val sites = sitesArray.mapIndexed { idx, el -> siteFromJson(el.asJsonObject, idx) }
-        val warnings = getObject(root, "warnings")?.let { warningFromJson(it) } ?: WarningSettings()
         return AppSettings(
             sites = sites,
-            warnings = warnings,
             version = AppSettings.VERSION
         )
     }
@@ -191,7 +188,7 @@ class AndroidSettingsRepository(
         if (version > WarningSettings.VERSION.toInt() || version < 1) {
             throw AppConfigException(ConfigInvalidFieldError("warnings.version", "unsupported warnings version: $version"))
         }
-        val warnOnCreds = obj.getAsJsonPrimitive("warnOnEmbeddedCredentials")?.asBoolean ?: true
+        val warnOnCreds = obj.getAsJsonPrimitive("warnOnEmbeddedCredentials")?.asBoolean
         val sens = obj.getAsJsonArray("sensitiveParams")?.let { toStringList(it) }
         return WarningSettings(
             warnOnEmbeddedCredentials = warnOnCreds,
@@ -227,15 +224,7 @@ class AndroidSettingsRepository(
     private fun appToDto(settings: AppSettings): JsonObject {
         val root = JsonObject()
         root.addProperty("version", settings.version.toInt())
-        // warnings
-        val warn = JsonObject().apply {
-            addProperty("warnOnEmbeddedCredentials", settings.warnings.warnOnEmbeddedCredentials)
-            settings.warnings.sensitiveParams?.let { arr ->
-                val jarr = JsonArray(); arr.forEach { jarr.add(it) }; add("sensitiveParams", jarr)
-            }
-            addProperty("version", settings.warnings.version.toInt())
-        }
-        root.add("warnings", warn)
+        // no root warnings in v1 schema (moved to per-rule)
 
         // sites
         val sitesArr = JsonArray()
@@ -269,7 +258,7 @@ class AndroidSettingsRepository(
             thenObj.add("remove", remArr)
             site.then.warn?.let { w ->
                 val wObj = JsonObject().apply {
-                    addProperty("warnOnEmbeddedCredentials", w.warnOnEmbeddedCredentials)
+                    w.warnOnEmbeddedCredentials?.let { addProperty("warnOnEmbeddedCredentials", it) }
                     w.sensitiveParams?.let { sp ->
                         val arr = JsonArray(); sp.forEach { arr.add(it) }; add("sensitiveParams", arr)
                     }

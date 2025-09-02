@@ -55,3 +55,26 @@ fun DetracktorTheme(
         content = content
     )
 }
+
+/**
+ * Enhanced DetracktorTheme that supports explicit theme mode control
+ */
+@Composable
+fun DetracktorTheme(
+    themeMode: com.gologlu.detracktor.runtime.android.presentation.types.ThemeMode = com.gologlu.detracktor.runtime.android.presentation.types.ThemeMode.SYSTEM,
+    // Dynamic color is available on Android 12+
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit
+) {
+    val darkTheme = when (themeMode) {
+        com.gologlu.detracktor.runtime.android.presentation.types.ThemeMode.LIGHT -> false
+        com.gologlu.detracktor.runtime.android.presentation.types.ThemeMode.DARK -> true
+        com.gologlu.detracktor.runtime.android.presentation.types.ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
+    
+    DetracktorTheme(
+        darkTheme = darkTheme,
+        dynamicColor = dynamicColor,
+        content = content
+    )
+}

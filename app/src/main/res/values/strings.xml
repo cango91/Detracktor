@@ -1,4 +1,72 @@
 <resources>
     <string name="app_name">Detracktor</string>
     <string name="widget_description">Clean URLs by removing tracking parameters</string>
+    
+    <!-- Main Screen -->
+    <string name="status_ready">Ready</string>
+    <string name="status_no_rules_matched">No rules matched</string>
+    <string name="status_rules_matched">%d rule(s) matched</string>
+    <string name="status_invalid_url">Invalid URL</string>
+    <string name="error_invalid_url">Clipboard doesn\'t contain a valid URL</string>
+    <string name="button_reveal_values">Reveal values</string>
+    <string name="button_hide_values">Hide values</string>
+    <string name="button_clean_url">Clean URL</string>
+    <string name="button_open_settings">Open Settings</string>
+    <string name="toast_cleaned_and_shared">Cleaned and ready to share</string>
+    <string name="toast_copied_cleaned_url">Copied cleaned URL</string>
+    
+    <!-- URL Preview -->
+    <string name="label_parameters">Parameters:</string>
+    
+    <!-- Clean Dialog -->
+    <string name="dialog_title_url_cleaned">URL Cleaned</string>
+    <string name="dialog_message_cleaned_ready">Cleaned URL is ready.</string>
+    <string name="button_share">Share</string>
+    <string name="button_copy">Copy</string>
+    
+    <!-- Warning Panel -->
+    <string name="warning_count_single">%d warning detected</string>
+    <string name="warning_count_plural">%d warnings detected</string>
+    <string name="warning_embedded_credentials">Embedded Credentials</string>
+    <string name="warning_embedded_credentials_desc">This URL contains embedded username/password credentials that may be visible to others.</string>
+    <string name="warning_sensitive_parameters">Sensitive Parameters</string>
+    <string name="warning_sensitive_parameters_desc">Found sensitive parameters: %s</string>
+    <string name="warning_rule_match">Rule Match: %s</string>
+    <string name="warning_rule_match_desc">%s - Removed: %s</string>
+    <string name="content_description_warning">Warning</string>
+    <string name="content_description_expand">Expand</string>
+    <string name="content_description_collapse">Collapse</string>
+    
+    <!-- Rules Summary -->
+    <string name="rules_count_single">%d rule matched</string>
+    <string name="rules_count_plural">%d rules matched</string>
+    <string name="rules_removed_label">Removed:</string>
+    <string name="content_description_rule_matched">Rule matched</string>
+    
+    <!-- Configuration Screen -->
+    <string name="config_title">Settings</string>
+    <string name="config_section_theme">Theme</string>
+    <string name="config_section_theme_desc">Choose your preferred app theme</string>
+    <string name="config_theme_light">Light</string>
+    <string name="config_theme_light_desc">Always use light theme</string>
+    <string name="config_theme_dark">Dark</string>
+    <string name="config_theme_dark_desc">Always use dark theme</string>
+    <string name="config_theme_system">Follow System</string>
+    <string name="config_theme_system_desc">Match system theme setting</string>
+    
+    <string name="config_section_url_preview">URL Preview Style</string>
+    <string name="config_section_url_preview_desc">Choose how URLs and parameters are displayed</string>
+    <string name="config_preview_chips">Chips View</string>
+    <string name="config_preview_chips_desc">Parameters shown as chips below URL</string>
+    <string name="config_preview_inline_blur">Inline Blur View</string>
+    <string name="config_preview_inline_blur_desc">Parameters integrated inline with blur effects</string>
+    
+    <string name="config_section_after_cleaning">After Cleaning URLs</string>
+    <string name="config_section_after_cleaning_desc">What to do with cleaned URLs</string>
+    <string name="config_action_always_share">Always Share</string>
+    <string name="config_action_always_share_desc">Automatically share cleaned URLs</string>
+    <string name="config_action_always_copy">Always Copy</string>
+    <string name="config_action_always_copy_desc">Automatically copy to clipboard</string>
+    <string name="config_action_ask">Ask Each Time</string>
+    <string name="config_action_ask_desc">Show dialog to choose action</string>
 </resources>

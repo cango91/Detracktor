@@ -50,7 +50,6 @@ class ServiceIntegrationTest {
                     metadata = null
                 )
             ),
-            warnings = com.gologlu.detracktor.application.types.WarningSettings(),
             version = AppSettings.VERSION
         )
         val site = rules.sites[0]
@@ -138,7 +137,6 @@ class ServiceIntegrationTest {
                     metadata = null
                 )
             ),
-            warnings = com.gologlu.detracktor.application.types.WarningSettings(),
             version = AppSettings.VERSION
         )
         val patterns = rules.sites[0].then.remove.map { it.pattern }
@@ -235,7 +233,6 @@ class ServiceIntegrationTest {
                     metadata = null
                 )
             ),
-            warnings = com.gologlu.detracktor.application.types.WarningSettings(),
             version = AppSettings.VERSION
         )
         
@@ -363,7 +360,6 @@ class ServiceIntegrationTest {
                     metadata = mapOf("description" to "Standard trackers for YouTube")
                 )
             ),
-            warnings = com.gologlu.detracktor.application.types.WarningSettings(),
             version = AppSettings.VERSION
         )
         val site = rules.sites[0]

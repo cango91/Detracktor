@@ -65,7 +65,8 @@ object MatchService {
 
     private fun compileRemovePatterns(siteIndex: Int, thenBlock: ThenBlock): List<String> {
         if (thenBlock.remove.isEmpty()) {
-            throw AppValidationException(AppValidationError("remove list cannot be empty", "sites[$siteIndex].then.remove"))
+            // Warn-only rules are allowed; return an empty remove set
+            return emptyList()
         }
         thenBlock.remove.forEachIndexed { idx, p ->
             Globby.requireValid(p.pattern, "sites[$siteIndex].then.remove[$idx]")

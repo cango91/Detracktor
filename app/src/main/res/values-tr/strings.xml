@@ -1,0 +1,72 @@
+<resources>
+    <string name="app_name">Detracktor</string>
+    <string name="widget_description">İzleme parametrelerini kaldırarak URL\'leri temizle</string>
+    
+    <!-- Main Screen -->
+    <string name="status_ready">Hazır</string>
+    <string name="status_no_rules_matched">Hiçbir kural eşleşmedi</string>
+    <string name="status_rules_matched">%d kural eşleşti</string>
+    <string name="status_invalid_url">Geçersiz URL</string>
+    <string name="error_invalid_url">Panoda geçerli bir URL bulunmuyor</string>
+    <string name="button_reveal_values">Değerleri göster</string>
+    <string name="button_hide_values">Değerleri gizle</string>
+    <string name="button_clean_url">URL\'yi temizle</string>
+    <string name="button_open_settings">Ayarları aç</string>
+    <string name="toast_cleaned_and_shared">Temizlendi ve paylaşıma hazır</string>
+    <string name="toast_copied_cleaned_url">Temizlenmiş URL kopyalandı</string>
+    
+    <!-- URL Preview -->
+    <string name="label_parameters">Parametreler:</string>
+    
+    <!-- Clean Dialog -->
+    <string name="dialog_title_url_cleaned">URL Temizlendi</string>
+    <string name="dialog_message_cleaned_ready">Temizlenmiş URL hazır.</string>
+    <string name="button_share">Paylaş</string>
+    <string name="button_copy">Kopyala</string>
+    
+    <!-- Warning Panel -->
+    <string name="warning_count_single">%d uyarı tespit edildi</string>
+    <string name="warning_count_plural">%d uyarı tespit edildi</string>
+    <string name="warning_embedded_credentials">Gömülü Kimlik Bilgileri</string>
+    <string name="warning_embedded_credentials_desc">Bu URL, başkaları tarafından görülebilecek gömülü kullanıcı adı/şifre kimlik bilgileri içeriyor.</string>
+    <string name="warning_sensitive_parameters">Hassas Parametreler</string>
+    <string name="warning_sensitive_parameters_desc">Hassas parametreler bulundu: %s</string>
+    <string name="warning_rule_match">Kural Eşleşmesi: %s</string>
+    <string name="warning_rule_match_desc">%s - Kaldırılan: %s</string>
+    <string name="content_description_warning">Uyarı</string>
+    <string name="content_description_expand">Genişlet</string>
+    <string name="content_description_collapse">Daralt</string>
+    
+    <!-- Rules Summary -->
+    <string name="rules_count_single">%d kural eşleşti</string>
+    <string name="rules_count_plural">%d kural eşleşti</string>
+    <string name="rules_removed_label">Kaldırılan:</string>
+    <string name="content_description_rule_matched">Kural eşleşti</string>
+    
+    <!-- Configuration Screen -->
+    <string name="config_title">Ayarlar</string>
+    <string name="config_section_theme">Tema</string>
+    <string name="config_section_theme_desc">Tercih ettiğiniz uygulama temasını seçin</string>
+    <string name="config_theme_light">Açık</string>
+    <string name="config_theme_light_desc">Her zaman açık tema kullan</string>
+    <string name="config_theme_dark">Koyu</string>
+    <string name="config_theme_dark_desc">Her zaman koyu tema kullan</string>
+    <string name="config_theme_system">Sistemi Takip Et</string>
+    <string name="config_theme_system_desc">Sistem tema ayarını takip et</string>
+    
+    <string name="config_section_url_preview">URL Önizleme Stili</string>
+    <string name="config_section_url_preview_desc">URL\'lerin ve parametrelerin nasıl görüntüleneceğini seçin</string>
+    <string name="config_preview_chips">Chip Görünümü</string>
+    <string name="config_preview_chips_desc">Parametreler URL\'nin altında chip olarak gösterilir</string>
+    <string name="config_preview_inline_blur">Satır İçi Bulanık Görünüm</string>
+    <string name="config_preview_inline_blur_desc">Parametreler bulanık efektlerle satır içinde entegre edilir</string>
+    
+    <string name="config_section_after_cleaning">URL Temizleme Sonrası</string>
+    <string name="config_section_after_cleaning_desc">Temizlenmiş URL\'lerle ne yapılacağı</string>
+    <string name="config_action_always_share">Her Zaman Paylaş</string>
+    <string name="config_action_always_share_desc">Temizlenmiş URL\'leri otomatik olarak paylaş</string>
+    <string name="config_action_always_copy">Her Zaman Kopyala</string>
+    <string name="config_action_always_copy_desc">Otomatik olarak panoya kopyala</string>
+    <string name="config_action_ask">Her Seferinde Sor</string>
+    <string name="config_action_ask_desc">Eylem seçmek için dialog göster</string>
+</resources>

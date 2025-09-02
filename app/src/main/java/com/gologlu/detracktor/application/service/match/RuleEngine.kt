@@ -2,6 +2,7 @@ package com.gologlu.detracktor.application.service.match
 
 import com.gologlu.detracktor.application.service.net.HostCanonicalizer
 import com.gologlu.detracktor.application.types.AppSettings
+import com.gologlu.detracktor.application.types.Domains
 import com.gologlu.detracktor.application.types.ThenBlock
 import com.gologlu.detracktor.application.types.WarningSettings
 import com.gologlu.detracktor.domain.model.QueryPairs
@@ -47,19 +48,17 @@ interface RuleEngine {
 
 class DefaultRuleEngine : RuleEngine {
     private var compiled: CompiledRuleset = CompiledRuleset(emptyList())
-    private var baseWarnings: WarningSettings = WarningSettings()
 
     context(hostCanonicalizer: HostCanonicalizer)
     override fun load(settings: AppSettings) {
         compiled = MatchService.compile(settings)
-        baseWarnings = settings.warnings
     }
 
     context(hostCanonicalizer: HostCanonicalizer)
     override fun evaluate(parts: UrlParts): Evaluation {
         val matches = MatchService.findMatches(parts, compiled)
         val tokenEffects = computeTokenEffects(parts.queryPairs, matches)
-        val effectiveWarnings = mergeWarnings(baseWarnings, matches.mapNotNull { it.site.then.warn })
+        val effectiveWarnings = computeEffectiveWarnings(matches)
         return Evaluation(matches = matches, tokenEffects = tokenEffects, effectiveWarnings = effectiveWarnings)
     }
 
@@ -98,18 +97,49 @@ class DefaultRuleEngine : RuleEngine {
         return effects
     }
 
-    private fun mergeWarnings(base: WarningSettings, overrides: List<WarningSettings>): WarningSettings {
-        if (overrides.isEmpty()) return base
-        // Field-wise merge with last-wins for overrides provided by later rules
-        var warn = base
-        for (ov in overrides) {
-            warn = WarningSettings(
-                warnOnEmbeddedCredentials = ov.warnOnEmbeddedCredentials,
-                sensitiveParams = ov.sensitiveParams ?: warn.sensitiveParams,
-                version = maxOf(warn.version, ov.version)
+    private fun computeEffectiveWarnings(matches: List<CompiledSiteRule>): WarningSettings {
+        if (matches.isEmpty()) return WarningSettings()
+        // 1) Catch-all rules (Domains.Any) are unioned together
+        val catchAllWarns = matches
+            .filter { it.site.when_.host.domains is Domains.Any }
+            .mapNotNull { it.site.then.warn }
+        val catchAll = unionWarnings(catchAllWarns)
+
+        // 2) Specific rules (non-Any) override catch-all with last-wins
+        val specifics = matches
+            .filter { it.site.when_.host.domains !is Domains.Any }
+            .mapNotNull { it.site.then.warn }
+
+        var result = catchAll
+        for (ov in specifics) {
+            result = WarningSettings(
+                warnOnEmbeddedCredentials = ov.warnOnEmbeddedCredentials ?: result.warnOnEmbeddedCredentials,
+                sensitiveParams = ov.sensitiveParams ?: result.sensitiveParams,
+                version = maxOf(result.version, ov.version)
             )
         }
-        return warn
+        return result
+    }
+
+    private fun unionWarnings(list: List<WarningSettings>): WarningSettings {
+        if (list.isEmpty()) return WarningSettings()
+        var warnOnCreds: Boolean? = null
+        val sens = LinkedHashSet<String>()
+        var version = 1U
+        for (w in list) {
+            warnOnCreds = when {
+                warnOnCreds == null -> w.warnOnEmbeddedCredentials
+                w.warnOnEmbeddedCredentials == null -> warnOnCreds
+                else -> warnOnCreds || w.warnOnEmbeddedCredentials
+            }
+            w.sensitiveParams?.let { sens.addAll(it) }
+            version = maxOf(version, w.version)
+        }
+        return WarningSettings(
+            warnOnEmbeddedCredentials = warnOnCreds,
+            sensitiveParams = if (sens.isEmpty()) null else sens.toList(),
+            version = version
+        )
     }
 }
 

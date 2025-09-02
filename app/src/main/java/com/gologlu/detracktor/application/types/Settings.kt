@@ -2,7 +2,6 @@ package com.gologlu.detracktor.application.types
 
 data class AppSettings(
     val sites: List<UrlRule>, // schema: rules.schema.json
-    val warnings: WarningSettings, // schema: warnings.schema.json
     val version: UInt = VERSION
 ){
     init { require(version <= VERSION && version >= 1U) { "version must be <= $VERSION and >= 1" } }
@@ -12,7 +11,7 @@ data class AppSettings(
 }
 
 data class WarningSettings(
-    val warnOnEmbeddedCredentials: Boolean = true,
+    val warnOnEmbeddedCredentials: Boolean? = null,
     val sensitiveParams: List<String>? = null,
     val version: UInt = VERSION
 ){
@@ -69,5 +68,5 @@ data class HostCond(
 // ---- Actions ----
 data class ThenBlock(
     val remove: List<Pattern>,  // param-name glob patterns (decoded names), e.g., "utm_*", "gclid"
-    val warn: WarningSettings?  // override root WarningSettings
+    val warn: WarningSettings?  // warning behavior defined per rule; use Domains.Any for catch-all
 )

@@ -173,7 +173,6 @@ class ServicePerformanceBenchmark {
                             metadata = null
                         )
                     ),
-                    warnings = com.gologlu.detracktor.application.types.WarningSettings(),
                     version = AppSettings.VERSION
                 )
             }
@@ -202,7 +201,6 @@ class ServicePerformanceBenchmark {
                     metadata = null
                 )
             ),
-            warnings = com.gologlu.detracktor.application.types.WarningSettings(),
             version = AppSettings.VERSION
         )
         val removePatterns = rules.sites[0].then.remove.map { it.pattern }
@@ -390,7 +388,6 @@ class ServicePerformanceBenchmark {
                                     metadata = null
                                 )
                             ),
-                            warnings = com.gologlu.detracktor.application.types.WarningSettings(),
                             version = AppSettings.VERSION
                         )
                     }

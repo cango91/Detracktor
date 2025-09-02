@@ -69,22 +69,8 @@ class DefaultSettingsService(
 
     private fun merge(defaults: AppSettings, user: AppSettings?): AppSettings {
         if (user == null) return defaults
-
-        // Merge strategy: user overrides take precedence; defaults fill gaps.
-        // For now, treat rules as replace-all when user override exists.
-        // WarningSettings merged field-by-field.
-        val mergedWarnings = mergeWarnings(defaults.warnings, user.warnings)
         return AppSettings(
             sites = if (user.sites.isNotEmpty()) user.sites else defaults.sites,
-            warnings = mergedWarnings,
-            version = maxOf(defaults.version, user.version)
-        )
-    }
-
-    private fun mergeWarnings(defaults: WarningSettings, user: WarningSettings): WarningSettings {
-        return WarningSettings(
-            warnOnEmbeddedCredentials = user.warnOnEmbeddedCredentials,
-            sensitiveParams = user.sensitiveParams ?: defaults.sensitiveParams,
             version = maxOf(defaults.version, user.version)
         )
     }

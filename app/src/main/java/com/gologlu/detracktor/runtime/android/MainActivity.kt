@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.ClipDescription
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -56,6 +57,7 @@ import com.gologlu.detracktor.domain.model.MaybeUrl
 import com.gologlu.detracktor.domain.model.QueryPairs
 import com.gologlu.detracktor.domain.model.QueryToken
 import com.gologlu.detracktor.domain.model.UrlParts
+import com.gologlu.detracktor.domain.model.Url
 import com.gologlu.detracktor.domain.service.UrlParser
 import com.gologlu.detracktor.runtime.android.presentation.ui.theme.DetracktorTheme
 import com.gologlu.detracktor.runtime.android.presentation.components.UrlPreviewInlineBlur
@@ -207,6 +209,7 @@ fun MainScreen(
     var resumeTick by remember { mutableStateOf(0) }
     var shareHandled by remember { mutableStateOf(false) }
     var dialogState by remember { mutableStateOf(DialogState()) }
+    var clipboardNonText by remember { mutableStateOf(false) }
     
     // Make uiSettings mutable within this composable for immediate updates
     var currentUiSettings by remember { mutableStateOf(uiSettings) }
@@ -231,12 +234,16 @@ fun MainScreen(
         if (resumeTick > 0) {
             delay(250)
             original = readClipboard(context)
+            clipboardNonText = original.isNullOrBlank() && clipboardHasNonText(context)
         }
     }
 
     LaunchedEffect(Unit) {
         if (original.isNullOrBlank()) {
             original = readClipboard(context)
+            if (original.isNullOrBlank()) {
+                clipboardNonText = clipboardHasNonText(context)
+            }
         }
     }
 
@@ -249,13 +256,33 @@ fun MainScreen(
             currentEvaluation = null
             warningData = buildWarningData(null, null).copy(isExpanded = warningPanelExpanded)
             ruleMatchData = RuleMatchDisplayData(emptyList())
-            errorMessage = null
-            status = "Ready"
+            if (clipboardNonText) {
+                errorMessage = "Not a URL"
+                status = "Invalid URL"
+            } else {
+                errorMessage = null
+                status = "Ready"
+            }
             return@LaunchedEffect
         }
         when (val parsed: DomainResult<UrlParts> = urlParser.parse(raw as MaybeUrl)) {
             is DomainResult.Success -> {
                 val parts = parsed.value
+                // Validate that this is a proper URL (requires scheme and host)
+                val isValidUrl = when (val validated = with(urlParser) { Url.from(raw as MaybeUrl) }) {
+                    is DomainResult.Success -> true
+                    is DomainResult.Failure -> false
+                }
+                if (!isValidUrl) {
+                    currentParts = null
+                    currentEffects = emptyList()
+                    currentEvaluation = null
+                    warningData = buildWarningData(null, null).copy(isExpanded = warningPanelExpanded)
+                    ruleMatchData = RuleMatchDisplayData(emptyList())
+                    errorMessage = "Not a URL"
+                    status = "Invalid URL"
+                    return@LaunchedEffect
+                }
                 val eval = with(hostCanonicalizer) { ruleEngine.evaluate(parts) }
                 currentParts = parts
                 currentEffects = eval.tokenEffects
@@ -302,7 +329,7 @@ fun MainScreen(
                 currentEvaluation = null
                 warningData = buildWarningData(null, null).copy(isExpanded = warningPanelExpanded)
                 ruleMatchData = RuleMatchDisplayData(emptyList())
-                errorMessage = "Clipboard doesn't contain a valid URL"
+                errorMessage = "Not a URL"
                 status = "Invalid URL"
             }
         }
@@ -468,6 +495,18 @@ private fun readClipboard(context: Context): String? {
     val item = clip?.getItemAt(0)
     val text = item?.coerceToText(context)?.toString()
     return text
+}
+
+private fun clipboardHasNonText(context: Context): Boolean {
+    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip: ClipData = cm.primaryClip ?: return false
+    if (clip.itemCount == 0) return false
+    val desc = clip.description
+    val hasTextMime = desc.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) ||
+            desc.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML)
+    if (hasTextMime) return false
+    val text = clip.getItemAt(0).coerceToText(context)?.toString()
+    return text.isNullOrBlank()
 }
 
 private fun buildAnnotatedUrl(

@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "sites": [
+    {
+      "when": {
+        "host": {
+          "domains": ["youtube.com", "youtu.be"],
+          "subdomains": ["www", "m", ""]
+        }
+      },
+      "then": {
+        "remove": ["si", "feature", "t", "list", "index"]
+      },
+      "metadata": {
+        "description": "YouTube tracking and navigation parameters"
+      }
+    },
+    {
+      "when": {
+        "host": {
+          "domains": ["x.com", "twitter.com"],
+          "subdomains": "*"
+        }
+      },
+      "then": {
+        "remove": ["s", "t", "ref_src", "ref_url"]
+      },
+      "metadata": {
+        "description": "Twitter/X tracking parameters"
+      }
+    },
+    {
+      "when": {
+        "host": {
+          "domains": ["instagram.com"],
+          "subdomains": "*"
+        }
+      },
+      "then": {
+        "remove": ["igsh", "igshid", "utm_*"]
+      },
+      "metadata": {
+        "description": "Instagram tracking parameters"
+      }
+    },
+    {
+      "when": {
+        "host": {
+          "domains": ["amazon.com", "amazon.co.uk", "amazon.de", "amazon.fr", "amazon.it", "amazon.es", "amazon.nl", "amazon.com.tr"],
+          "subdomains": "*"
+        }
+      },
+      "then": {
+        "remove": ["ref", "ref_", "tag", "linkCode", "camp", "creative", "creativeASIN"]
+      },
+      "metadata": {
+        "description": "Amazon affiliate and tracking parameters"
+      }
+    },
+    {
+      "when": {
+        "host": {
+          "domains": ["google.com", "google.co.uk", "google.de", "google.fr", "google.it", "google.es", "google.nl", "google.com.tr"],
+          "subdomains": "*"
+        }
+      },
+      "then": {
+        "remove": ["gclid", "gclsrc", "dclid", "utm_*"]
+      },
+      "metadata": {
+        "description": "Google Ads and tracking parameters"
+      }
+    },
+    {
+      "when": {
+        "host": {
+          "domains": "*"
+        }
+      },
+      "then": {
+        "remove": ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "msclkid", "_ga", "_gl", "campaign_*", "source", "medium", "mc_*"],
+        "warn": {
+          "warnOnEmbeddedCredentials": true,
+          "sensitiveParams": ["token", "access_token", "refresh_token", "password", "api_key", "secret"]
+        }
+      },
+      "metadata": {
+        "description": "Common tracking parameters across all sites"
+      }
+    }
+  ]
+}

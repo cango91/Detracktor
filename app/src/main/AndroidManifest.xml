@@ -14,7 +14,7 @@
         
         <!-- Main Activity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".runtime.android.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Detracktor"
@@ -34,12 +34,17 @@
         
         <!-- Configuration Activity -->
         <activity
-            android:name=".ConfigActivity"
+            android:name=".runtime.android.ConfigActivity"
             android:exported="false"
-            android:label="Settings"
-            android:theme="@style/Theme.Detracktor"
-            android:parentActivityName=".MainActivity" />
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Detracktor" />
         
+        <!-- Rule Edit Activity -->
+        <activity
+            android:name=".runtime.android.RuleEditActivity"
+            android:exported="false"
+            android:label="Edit Rules"
+            android:theme="@style/Theme.Detracktor" />
         
     </application>
 

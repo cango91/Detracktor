@@ -1,0 +1,22 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://detracktor.xn--glolu-jua30a.com/schema/v1/settings.schema.json",
+    "title": "Detracktor App Settings",
+    "description": "JSON schema for the root application settings (AppSettings)",
+    "type": "object",
+    "properties": {
+      "sites": {
+        "type": "array",
+        "description": "Array of site-specific URL rules",
+        "items": {
+          "$ref": "rules.schema.json"
+        }
+      },
+      "warnings": {
+        "$ref": "warnings.schema.json"
+      }
+    },
+    "required": ["sites", "warnings"],
+    "additionalProperties": false
+  }
+

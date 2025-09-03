@@ -1,4 +1,154 @@
 <resources>
     <string name="app_name">Detracktor</string>
     <string name="widget_description">Clean URLs by removing tracking parameters</string>
+    
+    <!-- Main Screen -->
+    <string name="status_ready">Ready</string>
+    <string name="status_no_rules_matched">No rules matched</string>
+    <string name="status_rules_matched">%d rule(s) matched</string>
+    <string name="status_invalid_url">Invalid URL</string>
+    <string name="error_invalid_url">Clipboard doesn\'t contain a valid URL</string>
+    <string name="button_reveal_values">Reveal values</string>
+    <string name="button_hide_values">Hide values</string>
+    <string name="button_clean_url">Clean URL</string>
+    <string name="button_open_settings">Open Settings</string>
+    <string name="toast_cleaned_and_shared">Cleaned and ready to share</string>
+    <string name="toast_copied_cleaned_url">Copied cleaned URL</string>
+    
+    <!-- URL Preview -->
+    <string name="label_parameters">Parameters:</string>
+    
+    <!-- Clean Dialog -->
+    <string name="url_cleaned">URL Cleaned</string>
+    <string name="url_cleaned_message">Cleaned URL is ready.</string>
+    <string name="share">Share</string>
+    <string name="copy">Copy</string>
+    <string name="remember_my_choice">Remember my choice</string>
+    
+    <!-- Share Warning Dialog -->
+    <string name="share_warning_title">Warning Detected</string>
+    <string name="share_warning_message">The cleaned URL contains warnings that you should be aware of before sharing:</string>
+    <string name="dont_warn_again">Don\'t warn again</string>
+    
+    <!-- Warning Messages -->
+    <string name="warnings_detected">Warnings Detected</string>
+    <string name="warning_credentials_detected">This URL contains embedded credentials</string>
+    <string name="warning_sensitive_params_detected">Sensitive parameters found: %s</string>
+    
+    <!-- Legacy Clean Dialog (for backward compatibility) -->
+    <string name="dialog_title_url_cleaned">URL Cleaned</string>
+    <string name="dialog_message_cleaned_ready">Cleaned URL is ready.</string>
+    <string name="button_share">Share</string>
+    <string name="button_copy">Copy</string>
+    
+    <!-- Warning Panel -->
+    <string name="warning_count_single">%d warning detected</string>
+    <string name="warning_count_plural">%d warnings detected</string>
+    <string name="warning_embedded_credentials">Embedded Credentials</string>
+    <string name="warning_embedded_credentials_desc">This URL contains embedded username/password credentials that may be visible to others.</string>
+    <string name="warning_sensitive_parameters">Sensitive Parameters</string>
+    <string name="warning_sensitive_parameters_desc">Found sensitive parameters: %s</string>
+    <string name="warning_rule_match">Rule Match: %s</string>
+    <string name="warning_rule_match_desc" formatted="false">%s - Removed: %s</string>
+    <string name="content_description_warning">Warning</string>
+    <string name="content_description_expand">Expand</string>
+    <string name="content_description_collapse">Collapse</string>
+    
+    <!-- Rules Summary -->
+    <string name="rules_count_single">%d rule matched</string>
+    <string name="rules_count_plural">%d rules matched</string>
+    <string name="rules_removed_label">Removed:</string>
+    <string name="content_description_rule_matched">Rule matched</string>
+    
+    <!-- Configuration Screen -->
+    <string name="config_title">Settings</string>
+    <string name="config_section_theme">Theme</string>
+    <string name="config_section_theme_desc">Choose your preferred app theme</string>
+    <string name="config_theme_light">Light</string>
+    <string name="config_theme_light_desc">Always use light theme</string>
+    <string name="config_theme_dark">Dark</string>
+    <string name="config_theme_dark_desc">Always use dark theme</string>
+    <string name="config_theme_system">Follow System</string>
+    <string name="config_theme_system_desc">Match system theme setting</string>
+    
+    <string name="config_section_url_preview">URL Preview Style</string>
+    <string name="config_section_url_preview_desc">Choose how URLs and parameters are displayed</string>
+    <string name="config_preview_chips">Chips View</string>
+    <string name="config_preview_chips_desc">Parameters shown as chips below URL</string>
+    <string name="config_preview_inline_blur">Inline Blur View</string>
+    <string name="config_preview_inline_blur_desc">Parameters integrated inline with blur effects</string>
+    
+    <string name="config_section_after_cleaning">After Cleaning URLs</string>
+    <string name="config_section_after_cleaning_desc">What to do with cleaned URLs</string>
+    <string name="config_action_always_share">Always Share</string>
+    <string name="config_action_always_share_desc">Automatically share cleaned URLs</string>
+    <string name="config_action_always_copy">Always Copy</string>
+    <string name="config_action_always_copy_desc">Automatically copy to clipboard</string>
+    <string name="config_action_ask">Ask Each Time</string>
+    <string name="config_action_ask_desc">Show dialog to choose action</string>
+    
+    <!-- Share Warnings Configuration -->
+    <string name="config_section_share_warnings">Share Warnings</string>
+    <string name="config_section_share_warnings_desc">Control warnings when sharing URLs with potential issues</string>
+    <string name="config_share_warning_show">Show Warnings</string>
+    <string name="config_share_warning_show_desc">Display warning dialog when sharing URLs with potential issues</string>
+    <string name="config_share_warning_suppress">Don\'t Warn Again</string>
+    <string name="config_share_warning_suppress_desc">Automatically share URLs without showing warning dialogs</string>
+    
+    <!-- Rule Management -->
+    <string name="config_section_rule_management">Rule Management</string>
+    <string name="config_section_rule_management_desc">Configure URL cleaning rules and patterns</string>
+    <string name="button_edit_rules">Edit Rules</string>
+    
+    <!-- Rule Edit Screen -->
+    <string name="rule_edit_title">Manage Rules</string>
+    <string name="button_reset_to_defaults">Reset to defaults</string>
+    <string name="button_add_rule">Add Rule</string>
+    <string name="content_description_back">Back</string>
+    <string name="content_description_add_rule">Add Rule</string>
+    <string name="content_description_reset_rules">Reset to defaults</string>
+    
+    <!-- Reset Dialog -->
+    <string name="dialog_reset_title">Reset to Defaults</string>
+    <string name="dialog_reset_message">This will replace all current rules with the default rule set. This action cannot be undone.</string>
+    <string name="button_reset">Reset</string>
+    <string name="button_cancel">Cancel</string>
+    
+    <!-- Rule List Items -->
+    <string name="rule_number">Rule %d</string>
+    <string name="content_description_edit_rule">Edit rule</string>
+    <string name="content_description_delete_rule">Delete rule</string>
+    <string name="dialog_delete_rule_title">Delete Rule</string>
+    <string name="dialog_delete_rule_message">Are you sure you want to delete this rule? This action cannot be undone.</string>
+    <string name="button_delete">Delete</string>
+    
+    <!-- Rule Details -->
+    <string name="rule_detail_host">Host:</string>
+    <string name="rule_detail_removes">Removes:</string>
+    <string name="rule_detail_schemes">Schemes:</string>
+    <string name="rule_detail_warns_on">Warns on:</string>
+    
+    <!-- Rule Host Display -->
+    <string name="rule_host_all_domains">All domains (*)</string>
+    <string name="rule_host_no_domains">No domains specified</string>
+    <string name="rule_host_more_domains">+%d more</string>
+    
+    <!-- Share Intent -->
+    <string name="share_chooser_title">Share cleaned URL</string>
+    <string name="clipboard_label">cleaned-url</string>
+    
+    <!-- MainActivity Status and Errors -->
+    <string name="show_values_emoji">👁️ Show Values</string>
+    <string name="hide_values_emoji">🙈 Hide Values</string>
+    
+    <!-- Warning Detection Messages -->
+    <string name="warning_embedded_detected">Embedded credentials detected</string>
+    <string name="warning_sensitive_params_found">Sensitive params: %s</string>
+    <string name="warning_matched_rules">Matched rules: %d</string>
+    
+    <!-- Rule Match Summary -->
+    <string name="rule_match_description">Rule matched for %s</string>
+    <string name="rule_match_unknown_domain">unknown</string>
+    <string name="rule_match_matched_label">Matched:</string>
+    <string name="rule_match_total_matched">(%d matched)</string>
 </resources>

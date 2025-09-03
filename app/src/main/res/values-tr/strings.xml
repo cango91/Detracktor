@@ -1,0 +1,154 @@
+<resources>
+    <string name="app_name">Detracktor</string>
+    <string name="widget_description">İzleme parametrelerini kaldırarak URL\'leri temizle</string>
+    
+    <!-- Main Screen -->
+    <string name="status_ready">Hazır</string>
+    <string name="status_no_rules_matched">Hiçbir kural eşleşmedi</string>
+    <string name="status_rules_matched">%d kural eşleşti</string>
+    <string name="status_invalid_url">Geçersiz URL</string>
+    <string name="error_invalid_url">Panoda geçerli bir URL bulunmuyor</string>
+    <string name="button_reveal_values">Değerleri göster</string>
+    <string name="button_hide_values">Değerleri gizle</string>
+    <string name="button_clean_url">URL\'yi temizle</string>
+    <string name="button_open_settings">Ayarları aç</string>
+    <string name="toast_cleaned_and_shared">Temizlendi ve paylaşıma hazır</string>
+    <string name="toast_copied_cleaned_url">Temizlenmiş URL kopyalandı</string>
+    
+    <!-- URL Preview -->
+    <string name="label_parameters">Parametreler:</string>
+    
+    <!-- Clean Dialog -->
+    <string name="url_cleaned">URL Temizlendi</string>
+    <string name="url_cleaned_message">Temizlenmiş URL hazır.</string>
+    <string name="share">Paylaş</string>
+    <string name="copy">Kopyala</string>
+    <string name="remember_my_choice">Seçimimi hatırla</string>
+    
+    <!-- Share Warning Dialog -->
+    <string name="share_warning_title">Uyarı Tespit Edildi</string>
+    <string name="share_warning_message">Temizlenmiş URL, paylaşmadan önce bilmeniz gereken uyarılar içeriyor:</string>
+    <string name="dont_warn_again">Bir daha uyarma</string>
+    
+    <!-- Warning Messages -->
+    <string name="warnings_detected">Uyarılar Tespit Edildi</string>
+    <string name="warning_credentials_detected">Bu URL gömülü kimlik bilgileri içeriyor</string>
+    <string name="warning_sensitive_params_detected">Hassas parametreler bulundu: %s</string>
+    
+    <!-- Legacy Clean Dialog (for backward compatibility) -->
+    <string name="dialog_title_url_cleaned">URL Temizlendi</string>
+    <string name="dialog_message_cleaned_ready">Temizlenmiş URL hazır.</string>
+    <string name="button_share">Paylaş</string>
+    <string name="button_copy">Kopyala</string>
+    
+    <!-- Warning Panel -->
+    <string name="warning_count_single">%d uyarı tespit edildi</string>
+    <string name="warning_count_plural">%d uyarı tespit edildi</string>
+    <string name="warning_embedded_credentials">Gömülü Kimlik Bilgileri</string>
+    <string name="warning_embedded_credentials_desc">Bu URL, başkaları tarafından görülebilecek gömülü kullanıcı adı/şifre kimlik bilgileri içeriyor.</string>
+    <string name="warning_sensitive_parameters">Hassas Parametreler</string>
+    <string name="warning_sensitive_parameters_desc">Hassas parametreler bulundu: %s</string>
+    <string name="warning_rule_match">Kural Eşleşmesi: %s</string>
+    <string name="warning_rule_match_desc" formatted="false">%s - Kaldırılan: %s</string>
+    <string name="content_description_warning">Uyarı</string>
+    <string name="content_description_expand">Genişlet</string>
+    <string name="content_description_collapse">Daralt</string>
+    
+    <!-- Rules Summary -->
+    <string name="rules_count_single">%d kural eşleşti</string>
+    <string name="rules_count_plural">%d kural eşleşti</string>
+    <string name="rules_removed_label">Kaldırılan:</string>
+    <string name="content_description_rule_matched">Kural eşleşti</string>
+    
+    <!-- Configuration Screen -->
+    <string name="config_title">Ayarlar</string>
+    <string name="config_section_theme">Tema</string>
+    <string name="config_section_theme_desc">Tercih ettiğiniz uygulama temasını seçin</string>
+    <string name="config_theme_light">Açık</string>
+    <string name="config_theme_light_desc">Her zaman açık tema kullan</string>
+    <string name="config_theme_dark">Koyu</string>
+    <string name="config_theme_dark_desc">Her zaman koyu tema kullan</string>
+    <string name="config_theme_system">Sistemi Takip Et</string>
+    <string name="config_theme_system_desc">Sistem tema ayarını takip et</string>
+    
+    <string name="config_section_url_preview">URL Önizleme Stili</string>
+    <string name="config_section_url_preview_desc">URL\'lerin ve parametrelerin nasıl görüntüleneceğini seçin</string>
+    <string name="config_preview_chips">Chip Görünümü</string>
+    <string name="config_preview_chips_desc">Parametreler URL\'nin altında chip olarak gösterilir</string>
+    <string name="config_preview_inline_blur">Satır İçi Bulanık Görünüm</string>
+    <string name="config_preview_inline_blur_desc">Parametreler bulanık efektlerle satır içinde entegre edilir</string>
+    
+    <string name="config_section_after_cleaning">URL Temizleme Sonrası</string>
+    <string name="config_section_after_cleaning_desc">Temizlenmiş URL\'lerle ne yapılacağı</string>
+    <string name="config_action_always_share">Her Zaman Paylaş</string>
+    <string name="config_action_always_share_desc">Temizlenmiş URL\'leri otomatik olarak paylaş</string>
+    <string name="config_action_always_copy">Her Zaman Kopyala</string>
+    <string name="config_action_always_copy_desc">Otomatik olarak panoya kopyala</string>
+    <string name="config_action_ask">Her Seferinde Sor</string>
+    <string name="config_action_ask_desc">Eylem seçmek için dialog göster</string>
+    
+    <!-- Share Warnings Configuration -->
+    <string name="config_section_share_warnings">Paylaşım Uyarıları</string>
+    <string name="config_section_share_warnings_desc">Potansiyel sorunlu URL\'leri paylaşırken uyarıları kontrol et</string>
+    <string name="config_share_warning_show">Uyarıları Göster</string>
+    <string name="config_share_warning_show_desc">Potansiyel sorunlu URL\'leri paylaşırken uyarı dialogu göster</string>
+    <string name="config_share_warning_suppress">Bir Daha Uyarma</string>
+    <string name="config_share_warning_suppress_desc">Uyarı dialogları göstermeden URL\'leri otomatik paylaş</string>
+    
+    <!-- Rule Management -->
+    <string name="config_section_rule_management">Kural Yönetimi</string>
+    <string name="config_section_rule_management_desc">URL temizleme kurallarını ve desenlerini yapılandır</string>
+    <string name="button_edit_rules">Kuralları Düzenle</string>
+    
+    <!-- Rule Edit Screen -->
+    <string name="rule_edit_title">Kuralları Yönet</string>
+    <string name="button_reset_to_defaults">Varsayılanlara sıfırla</string>
+    <string name="button_add_rule">Kural Ekle</string>
+    <string name="content_description_back">Geri</string>
+    <string name="content_description_add_rule">Kural Ekle</string>
+    <string name="content_description_reset_rules">Varsayılanlara sıfırla</string>
+    
+    <!-- Reset Dialog -->
+    <string name="dialog_reset_title">Varsayılanlara Sıfırla</string>
+    <string name="dialog_reset_message">Bu işlem mevcut tüm kuralları varsayılan kural seti ile değiştirecek. Bu eylem geri alınamaz.</string>
+    <string name="button_reset">Sıfırla</string>
+    <string name="button_cancel">İptal</string>
+    
+    <!-- Rule List Items -->
+    <string name="rule_number">Kural %d</string>
+    <string name="content_description_edit_rule">Kuralı düzenle</string>
+    <string name="content_description_delete_rule">Kuralı sil</string>
+    <string name="dialog_delete_rule_title">Kuralı Sil</string>
+    <string name="dialog_delete_rule_message">Bu kuralı silmek istediğinizden emin misiniz? Bu eylem geri alınamaz.</string>
+    <string name="button_delete">Sil</string>
+    
+    <!-- Rule Details -->
+    <string name="rule_detail_host">Host:</string>
+    <string name="rule_detail_removes">Kaldırır:</string>
+    <string name="rule_detail_schemes">Şemalar:</string>
+    <string name="rule_detail_warns_on">Uyarır:</string>
+    
+    <!-- Rule Host Display -->
+    <string name="rule_host_all_domains">Tüm domainler (*)</string>
+    <string name="rule_host_no_domains">Domain belirtilmemiş</string>
+    <string name="rule_host_more_domains">+%d daha</string>
+    
+    <!-- Share Intent -->
+    <string name="share_chooser_title">Temizlenmiş URL\'yi paylaş</string>
+    <string name="clipboard_label">temizlenmiş-url</string>
+    
+    <!-- MainActivity Status and Errors -->
+    <string name="show_values_emoji">👁️ Değerleri Göster</string>
+    <string name="hide_values_emoji">🙈 Değerleri Gizle</string>
+    
+    <!-- Warning Detection Messages -->
+    <string name="warning_embedded_detected">Gömülü kimlik bilgileri tespit edildi</string>
+    <string name="warning_sensitive_params_found">Hassas parametreler: %s</string>
+    <string name="warning_matched_rules">Eşleşen kurallar: %d</string>
+    
+    <!-- Rule Match Summary -->
+    <string name="rule_match_description">%s için kural eşleşti</string>
+    <string name="rule_match_unknown_domain">bilinmeyen</string>
+    <string name="rule_match_matched_label">Eşleşen:</string>
+    <string name="rule_match_total_matched">(%d eşleşti)</string>
+</resources>

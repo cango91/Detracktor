@@ -1,0 +1,136 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://detracktor.xn--glolu-jua30a.com/schema/v1/rules.schema.json",
+    "title": "Detracktor Rule",
+    "description": "JSON schema for a single URL rule (UrlRule)",
+    "type": "object",
+    "properties": {
+      "when": {
+        "$ref": "#/$defs/whenBlock"
+      },
+      "then": {
+        "$ref": "#/$defs/thenBlock"
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Optional metadata for documentation purposes",
+        "additionalProperties": true
+      }
+    },
+    "required": ["when", "then"],
+    "additionalProperties": false,
+    "$defs": {
+      "whenBlock": {
+        "type": "object",
+        "description": "Conditions that must be met for the rule to apply",
+        "properties": {
+          "host": {
+            "$ref": "#/$defs/hostCond"
+          },
+          "schemes": {
+            "type": "array",
+            "description": "URL schemes this rule applies to. Defaults to [\"http\", \"https\"] if not specified",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          }
+        },
+        "required": ["host"],
+        "additionalProperties": false
+      },
+      "hostCond": {
+        "type": "object",
+        "description": "Host matching conditions",
+        "properties": {
+          "domains": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": ["*"],
+                "description": "\"*\" matches any domain"
+              },
+              {
+                "type": "array",
+                "description": "Array of top-level domains respecting the dot-boundary",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            ]
+          },
+          "subdomains": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": ["*", ""],
+                "description": "\"*\" matches any subdomain, \"\" matches no subdomain (none)"
+              },
+              {
+                "type": "array",
+                "description": "Array of specific subdomain labels to match. Empty array means no subdomain (none)",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "required": ["domains"],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "domains": {
+                  "type": "array"
+                }
+              }
+            },
+            "then": {
+              "required": ["subdomains"]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "domains": {
+                  "type": "string"
+                }
+              }
+            },
+            "then": {
+              "not": {
+                "required": ["subdomains"]
+              }
+            }
+          }
+        ],
+        "additionalProperties": false
+      },
+      "thenBlock": {
+        "type": "object",
+        "description": "Actions to take when conditions are met",
+        "properties": {
+          "remove": {
+            "type": "array",
+            "description": "Parameter name patterns to remove from URLs",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "warn": {
+            "$ref": "warnings.schema.json"
+          }
+        },
+        "anyOf": [
+          { "required": ["remove"] },
+          { "required": ["warn"] }
+        ],
+        "additionalProperties": false
+      }
+    }
+  }

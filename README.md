@@ -3,62 +3,44 @@
 [![CI](https://github.com/cango91/Detracktor/actions/workflows/ci.yml/badge.svg)](https://github.com/cango91/Detracktor/actions/workflows/ci.yml)
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/cango91/Detracktor?include_prereleases)](https://github.com/cango91/Detracktor/releases)
 
-A tiny Android app that cleans URLs by removing tracking parameters on demand.
+A privacy-focused Android application that removes tracking parameters from URLs to protect user privacy and clean up shared links.
+
+## Overview
+
+Detracktor automatically detects URLs in your clipboard and removes common tracking parameters like UTM codes, Facebook click IDs, Google Analytics parameters, and other privacy-invasive tracking tokens with a single touch. The app provides a clean, intuitive interface for URL cleaning with customizable rules and warning systems.
 
 ## Features
 
-- **Simple and fast** - Triggered via share menu or manual clipboard cleaning
+- **Simple and fast** 
 - **Multiple trigger methods**:
-  - Share target (when sharing URLs from other apps)
-  - Manual clipboard cleaning via main app
-- **Configurable cleaning modes**:
-  - Remove all parameters
-  - Custom rules for specific websites
-- **Toast feedback**: Shows "Clipboard empty", "No change", or "Cleaned"
-- **JSON configuration** with default rules for popular tracking parameters
-
-## Default Cleaning Rules
-
-When using custom rules mode, the app includes default rules for:
-
-- **Twitter/X**: Removes `t` and `si` parameters
-- **Facebook**: Removes `fbclid` and `fb_*` parameters  
-- **YouTube**: Removes `si` and `feature` parameters
-- **Universal**: Removes `utm_*`, `gclid`, `msclkid`, and `mc_*` parameters
-
-## How to Use
-
-1. **Share Menu**: Share any URL to Detracktor from another app
-2. **Manual**: Open the app and tap "Clean Clipboard URL"
+  - Share to Detracktor from any app to get a trackers-cleaned shareable link back.
+  - Launch Detracktor to investigate the URL in your clipboard manually.
+- **Configurable cleaning rules**
+- **Configurable warning rules**
 
 ## Configuration
 
-Open the app and tap "Settings" to:
-- Toggle between "Remove all parameters" and "Custom rules" mode
-- View current cleaning rules
-- Reset to default configuration
+### Default Rules
+The app comes with pre-configured rules for common tracking parameters:
+- UTM parameters (`utm_source`, `utm_medium`, `utm_campaign`, etc.)
+- Social media tracking (`fbclid`, `gclid`, `msclkid`)
+- Analytics tokens (`_ga`, `_gl`, `mc_*`)
+- Campaign parameters (`campaign_*`, `source`, `medium`)
+- Site-specific rules for popular social media apps
 
-## Technical Details
+### Custom Rules
+Users can add custom rules through the settings interface:
+- Domain-specific patterns
+- Parameter name matching with wildcards
+- Subdomain handling options
+- Warning configuration
 
-- **Target SDK**: 36 (Android 15)
-- **Minimum SDK**: 29 (Android 10)
-- **Architecture**: Client-only, no network or background services
-- **Storage**: JSON configuration files
-- **UI**: Modern Compose UI with Material 3 design
+## Testing
 
-## Installation
-
-### Download Release
-Download the latest APK from [Releases](https://github.com/cango91/Detracktor/releases) and install on your Android device.
-
-### Build from Source
-Build the APK using Android Studio or Gradle:
-
-```bash
-./gradlew assembleDebug
-```
-
-The APK will be generated at `app/build/outputs/apk/debug/app-debug.apk`
+Comprehensive test suite with unit and integration tests:
+- **Unit Tests** - Core logic testing with Robolectric
+- **Integration Tests** - End-to-end testing on real devices
+- **UI Tests** - Compose UI testing framework (planned)
 
 ## Development
 
@@ -70,7 +52,7 @@ This project uses automated version synchronization between git tags and Android
 ./scripts/setup-hooks.sh
 
 # Update version for new release
-./scripts/sync-version.sh v1.2.3
+./scripts/sync-version.sh v1.2.3 # or v1.2.3-pre.release for pre-release versions
 
 # Commit and tag
 git add . && git commit -m "chore: bump version to 1.2.3"
@@ -80,9 +62,20 @@ git push origin main --tags
 
 The pre-push hook automatically validates that git tags match the Android app version declared in `version.properties`.
 
-## Privacy
+## Privacy and Security
 
-Detracktor operates entirely offline with no network access, data collection, or analytics. All processing happens locally on your device.
+### Data Handling
+- **No Network Access** - All processing happens locally on device
+- **No Data Collection** - No analytics, telemetry, or user data collection
+- **Clipboard Privacy** - URLs are processed locally and never transmitted
+
+### Privacy-Aware UI
+- **Minimal Display** - URL parameter values are hidden by default, including any embedded credentials. Only known tracking parameters are fully visible to maintain privacy while allowing users to identify trackers.
+
+### Warning System
+- **Embedded Credentials** - Warns about URLs containing usernames/passwords
+- **Sensitive Parameters** - Identifies potentially sensitive query parameters
+- **Configurable Alerts** - Users can customize warning behavior
 
 ## Acknowledgments
 

@@ -86,16 +86,16 @@ dependencies {
     implementation(libs.androidx.preference.ktx)  // Settings
     
     // Enhanced URL cleaning dependencies
-    implementation("com.ibm.icu:icu4j:77.1")  // IDN and internationalization support
-    implementation("org.apache.commons:commons-lang3:3.18.0")  // Enhanced regex and pattern matching
+    implementation(libs.icu4j)  // IDN and internationalization support
+    implementation(libs.commons.lang3)  // Enhanced regex and pattern matching
     // Using Android's built-in LruCache instead of Caffeine for Android compatibility
     
     // Core library desugaring for compatibility
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
-    testImplementation("org.mockito:mockito-inline:5.2.0")  // Enhanced mocking for new functionality
+    testImplementation(libs.mockito.inline)  // Enhanced mocking for new functionality
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.junit)
@@ -147,7 +147,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
 // Optional: Task to combine unit and instrumented test coverage
 tasks.register<JacocoReport>("jacocoFullReport") {
-    dependsOn("testDebugUnitTest", "createDebugCoverageReport")
+    dependsOn("testDebugUnitTest")
     
     reports {
         xml.required.set(true)
@@ -175,10 +175,12 @@ tasks.register<JacocoReport>("jacocoFullReport") {
 
     sourceDirectories.setFrom(files(mainSrc, kotlinSrc))
     classDirectories.setFrom(files(debugTree))
+    
+    // Use wildcard pattern to find coverage files regardless of emulator config
     executionData.setFrom(fileTree(layout.buildDirectory.get()) {
         include(
             "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-            "outputs/code_coverage/debugAndroidTest/connected/coverage.ec"
+            "outputs/code_coverage/debugAndroidTest/connected/**/coverage.ec"
         )
     })
 }

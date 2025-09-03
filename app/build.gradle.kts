@@ -147,7 +147,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
 
 // Optional: Task to combine unit and instrumented test coverage
 tasks.register<JacocoReport>("jacocoFullReport") {
-    dependsOn("testDebugUnitTest", "createDebugCoverageReport")
+    dependsOn("testDebugUnitTest")
     
     reports {
         xml.required.set(true)

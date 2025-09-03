@@ -17,21 +17,27 @@ class RuleFormValidator {
         val errors = mutableListOf<String>()
         val warnings = mutableListOf<String>()
         
-        // Validate host pattern
-        errors.addAll(validateHostPattern(formData.hostPattern, formData.subdomainMode))
+        // Validate domains
+        errors.addAll(validateDomains(formData.domainsInput))
+        
+        // Validate subdomain mode and subdomains
+        errors.addAll(validateSubdomainMode(formData.subdomainMode, formData.subdomainsInput))
         
         // Validate remove patterns
-        errors.addAll(validateRemovePatterns(formData.removePatterns))
-        
-        // Validate schemes
-        errors.addAll(validateSchemes(formData.schemes))
+        errors.addAll(validateRemovePatterns(formData.removePatternsInput))
         
         // Validate sensitive parameters
-        warnings.addAll(validateSensitiveParams(formData.sensitiveParams))
+        warnings.addAll(validateSensitiveParams(formData.sensitiveParamsInput))
         
-        // Check for empty rule (no remove patterns)
-        if (formData.removePatterns.all { it.isBlank() }) {
-            warnings.add("Rule has no removal patterns - it won't remove any parameters")
+        // Combined constraints for then block:
+        val hasRemove = formData.removePatternsInput.isNotBlank()
+        val hasWarn = formData.warnOnCredentials || formData.sensitiveParamsInput.isNotBlank()
+        if (!hasRemove && !hasWarn) {
+            errors.add("Rule must define at least one of removal patterns or warnings")
+        } else if (!hasRemove && hasWarn) {
+            warnings.add("Warn-only rule: it won't remove any parameters")
+        } else if (hasRemove && !hasWarn) {
+            // fine; purely removal rule
         }
         
         return RuleValidationResult(
@@ -42,25 +48,51 @@ class RuleFormValidator {
     }
     
     /**
-     * Validate host pattern based on subdomain mode
+     * Validate domains input (comma-separated)
      */
-    fun validateHostPattern(pattern: String, subdomainMode: SubdomainMode): List<String> {
+    fun validateDomains(domainsInput: String): List<String> {
+        val errors = mutableListOf<String>()
+        
+        if (domainsInput.isBlank()) {
+            errors.add("At least one domain is required")
+            return errors
+        }
+        
+        val domains = parseCommaSeparatedList(domainsInput)
+        domains.forEach { domain ->
+            if (!isValidDomainPattern(domain)) {
+                errors.add("Invalid domain: $domain")
+            }
+        }
+        
+        return errors
+    }
+    
+    /**
+     * Validate subdomain mode and subdomains input
+     */
+    fun validateSubdomainMode(subdomainMode: SubdomainMode, subdomainsInput: String): List<String> {
         val errors = mutableListOf<String>()
         
         when (subdomainMode) {
-            SubdomainMode.ANY -> {
-                // Global wildcard - no specific validation needed
-                if (pattern.isNotBlank() && pattern != "*") {
-                    errors.add("Global wildcard mode should use '*' or leave empty")
-                }
+            SubdomainMode.NONE -> {
+                // No validation needed
             }
-            SubdomainMode.EXACT, SubdomainMode.WILDCARD -> {
-                if (pattern.isBlank()) {
-                    errors.add("Host pattern is required")
+            SubdomainMode.ANY -> {
+                // No validation needed
+            }
+            SubdomainMode.SPECIFIC_LIST -> {
+                if (subdomainsInput.isBlank()) {
+                    errors.add("Specific subdomains are required when using specific list mode")
                 } else {
-                    // Basic domain validation
-                    if (!isValidDomainPattern(pattern)) {
-                        errors.add("Invalid domain pattern: $pattern")
+                    val subdomains = parseCommaSeparatedList(subdomainsInput)
+                    subdomains.forEach { subdomain ->
+                        if (subdomain.contains('.')) {
+                            errors.add("Subdomain should not contain dots: $subdomain")
+                        }
+                        if (!isValidSubdomainName(subdomain)) {
+                            errors.add("Invalid subdomain name: $subdomain")
+                        }
                     }
                 }
             }
@@ -70,11 +102,16 @@ class RuleFormValidator {
     }
     
     /**
-     * Validate removal patterns (glob patterns)
+     * Validate removal patterns (comma-separated glob patterns)
      */
-    fun validateRemovePatterns(patterns: List<String>): List<String> {
+    fun validateRemovePatterns(patternsInput: String): List<String> {
         val errors = mutableListOf<String>()
         
+        if (patternsInput.isBlank()) {
+            return errors // Empty is allowed, will be caught as warning in main validation
+        }
+        
+        val patterns = parseCommaSeparatedList(patternsInput)
         patterns.forEachIndexed { index, pattern ->
             if (pattern.isNotBlank()) {
                 try {
@@ -113,10 +150,11 @@ class RuleFormValidator {
     /**
      * Validate sensitive parameters (warnings only)
      */
-    private fun validateSensitiveParams(params: List<String>): List<String> {
+    private fun validateSensitiveParams(paramsInput: String): List<String> {
         val warnings = mutableListOf<String>()
         
-        if (params.isNotEmpty()) {
+        if (paramsInput.isNotBlank()) {
+            val params = parseCommaSeparatedList(paramsInput)
             val duplicates = params.groupBy { it }.filter { it.value.size > 1 }.keys
             if (duplicates.isNotEmpty()) {
                 warnings.add("Duplicate sensitive parameters: ${duplicates.joinToString(", ")}")
@@ -134,6 +172,24 @@ class RuleFormValidator {
         // This is a simplified validation - could be enhanced
         val domainRegex = Regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$")
         return pattern.matches(domainRegex) || pattern == "*"
+    }
+    
+    /**
+     * Parse comma-separated list and trim whitespace
+     */
+    private fun parseCommaSeparatedList(input: String): List<String> {
+        return input.split(',')
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+    }
+    
+    /**
+     * Validate subdomain name (no dots, valid characters)
+     */
+    private fun isValidSubdomainName(subdomain: String): Boolean {
+        // Subdomain should be a valid hostname component (no dots)
+        val subdomainRegex = Regex("^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?$")
+        return subdomain.matches(subdomainRegex)
     }
     
     companion object {

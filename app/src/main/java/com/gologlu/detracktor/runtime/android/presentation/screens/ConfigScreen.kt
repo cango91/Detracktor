@@ -23,11 +23,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gologlu.detracktor.runtime.android.presentation.components.PreviewSection
 import com.gologlu.detracktor.runtime.android.presentation.types.AfterCleaningAction
 import com.gologlu.detracktor.runtime.android.presentation.types.ThemeMode
 import com.gologlu.detracktor.runtime.android.presentation.types.UiSettings
-import com.gologlu.detracktor.runtime.android.presentation.types.UrlPreviewMode
 
 /**
  * Main configuration screen with all UI settings sections
@@ -47,14 +45,6 @@ fun ConfigScreen(
             .testTag("config-screen"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Screen title
-        Text(
-            text = "Settings",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.testTag("config-title")
-        )
-        
         // Theme section
         ThemeSection(
             currentTheme = uiSettings.themeMode,
@@ -65,21 +55,21 @@ fun ConfigScreen(
         
         HorizontalDivider()
         
-        // URL Preview section
-        UrlPreviewSection(
-            currentMode = uiSettings.urlPreviewMode,
-            onModeChange = { mode ->
-                onSettingsChange(uiSettings.copy(urlPreviewMode = mode))
-            }
-        )
-        
-        HorizontalDivider()
-        
         // After cleaning section
         AfterCleaningSection(
             currentAction = uiSettings.afterCleaningAction,
             onActionChange = { action ->
                 onSettingsChange(uiSettings.copy(afterCleaningAction = action))
+            }
+        )
+        
+        HorizontalDivider()
+        
+        // Share warning section
+        ShareWarningSection(
+            suppressShareWarnings = uiSettings.suppressShareWarnings,
+            onSuppressChange = { suppress ->
+                onSettingsChange(uiSettings.copy(suppressShareWarnings = suppress))
             }
         )
         
@@ -154,80 +144,6 @@ private fun ThemeSection(
     }
 }
 
-/**
- * URL preview mode selection section with horizontal layout and live preview
- */
-@Composable
-private fun UrlPreviewSection(
-    currentMode: UrlPreviewMode,
-    onModeChange: (UrlPreviewMode) -> Unit
-) {
-    SettingsSection(
-        title = "URL Preview Style",
-        description = "Choose how URLs and parameters are displayed"
-    ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Horizontal radio button layout
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .selectableGroup()
-                    .testTag("preview-mode-selector"),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                UrlPreviewMode.values().forEach { mode ->
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .selectable(
-                                selected = currentMode == mode,
-                                onClick = { onModeChange(mode) },
-                                role = Role.RadioButton
-                            )
-                            .padding(8.dp)
-                            .testTag("preview-option-${mode.name.lowercase()}"),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        RadioButton(
-                            selected = currentMode == mode,
-                            onClick = null,
-                            modifier = Modifier.testTag("preview-radio-${mode.name.lowercase()}")
-                        )
-                        Column {
-                            Text(
-                                text = when (mode) {
-                                    UrlPreviewMode.CHIPS -> "Chips"
-                                    UrlPreviewMode.INLINE_BLUR -> "Inline Blur"
-                                },
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.testTag("preview-title-${mode.name.lowercase()}")
-                            )
-                            Text(
-                                text = when (mode) {
-                                    UrlPreviewMode.CHIPS -> "Chip-based"
-                                    UrlPreviewMode.INLINE_BLUR -> "Inline text"
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                modifier = Modifier.testTag("preview-desc-${mode.name.lowercase()}")
-                            )
-                        }
-                    }
-                }
-            }
-            
-            // Live preview section
-            PreviewSection(
-                currentMode = currentMode,
-                modifier = Modifier.testTag("live-preview-section")
-            )
-        }
-    }
-}
 
 /**
  * After cleaning action selection section
@@ -285,6 +201,93 @@ private fun AfterCleaningSection(
                             modifier = Modifier.testTag("action-desc-${action.name.lowercase()}")
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Share warning settings section
+ */
+@Composable
+private fun ShareWarningSection(
+    suppressShareWarnings: Boolean,
+    onSuppressChange: (Boolean) -> Unit
+) {
+    SettingsSection(
+        title = "Share Warnings",
+        description = "Control warnings when sharing URLs with potential issues"
+    ) {
+        Column(
+            modifier = Modifier.selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Show warnings option
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = !suppressShareWarnings,
+                        onClick = { onSuppressChange(false) },
+                        role = Role.RadioButton
+                    )
+                    .padding(vertical = 4.dp)
+                    .testTag("share-warning-show"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                RadioButton(
+                    selected = !suppressShareWarnings,
+                    onClick = null,
+                    modifier = Modifier.testTag("share-warning-show-radio")
+                )
+                Column {
+                    Text(
+                        text = "Show Warnings",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.testTag("share-warning-show-title")
+                    )
+                    Text(
+                        text = "Display warning dialog when sharing URLs with potential issues",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier.testTag("share-warning-show-desc")
+                    )
+                }
+            }
+            
+            // Suppress warnings option
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = suppressShareWarnings,
+                        onClick = { onSuppressChange(true) },
+                        role = Role.RadioButton
+                    )
+                    .padding(vertical = 4.dp)
+                    .testTag("share-warning-suppress"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                RadioButton(
+                    selected = suppressShareWarnings,
+                    onClick = null,
+                    modifier = Modifier.testTag("share-warning-suppress-radio")
+                )
+                Column {
+                    Text(
+                        text = "Don't Warn Again",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.testTag("share-warning-suppress-title")
+                    )
+                    Text(
+                        text = "Automatically share URLs without showing warning dialogs",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier.testTag("share-warning-suppress-desc")
+                    )
                 }
             }
         }

@@ -19,6 +19,7 @@ import com.gologlu.detracktor.application.types.Subdomains
 import com.gologlu.detracktor.application.types.ThenBlock
 import com.gologlu.detracktor.application.types.UrlRule
 import com.gologlu.detracktor.application.types.WarningSettings
+import com.gologlu.detracktor.application.types.SensitiveMergeMode
 import com.gologlu.detracktor.application.types.WhenBlock
 import java.io.File
 import java.io.FileReader
@@ -172,9 +173,13 @@ class AndroidSettingsRepository(
         val schemes = getArray(whenObj, "schemes")?.let { toStringList(it).map { s -> s.lowercase() } }
         val whenBlock = WhenBlock(host = HostCond(domains = domains, subdomains = subdomains), schemes = schemes)
 
-        val removeArr = getArray(thenObj, "remove") ?: throw AppConfigException(ConfigInvalidFieldError("sites[$index].then.remove", "remove array is required"))
-        if (removeArr.size() == 0) throw AppConfigException(ConfigInvalidFieldError("sites[$index].then.remove", "remove array cannot be empty"))
-        val remove = toStringList(removeArr).map { Pattern(it) } // Pattern validates with Globby
+        val removeArr = getArray(thenObj, "remove")
+        val remove = if (removeArr == null) {
+            // Warn-only rule is allowed: empty removal set
+            emptyList()
+        } else {
+            toStringList(removeArr).map { Pattern(it) } // Pattern validates with Globby
+        }
 
         val warn = getObject(thenObj, "warn")?.let { warningFromJson(it) }
         val thenBlock = ThenBlock(remove = remove, warn = warn)
@@ -190,9 +195,17 @@ class AndroidSettingsRepository(
         }
         val warnOnCreds = obj.getAsJsonPrimitive("warnOnEmbeddedCredentials")?.asBoolean
         val sens = obj.getAsJsonArray("sensitiveParams")?.let { toStringList(it) }
+        val mergeMode = obj.getAsJsonPrimitive("sensitiveMerge")?.asString?.let { value ->
+            when (value) {
+                "UNION" -> SensitiveMergeMode.UNION
+                "REPLACE" -> SensitiveMergeMode.REPLACE
+                else -> null
+            }
+        }
         return WarningSettings(
             warnOnEmbeddedCredentials = warnOnCreds,
             sensitiveParams = sens,
+            sensitiveMerge = mergeMode,
             version = WarningSettings.VERSION
         )
     }
@@ -262,6 +275,7 @@ class AndroidSettingsRepository(
                     w.sensitiveParams?.let { sp ->
                         val arr = JsonArray(); sp.forEach { arr.add(it) }; add("sensitiveParams", arr)
                     }
+                    w.sensitiveMerge?.let { addProperty("sensitiveMerge", it.name) }
                     addProperty("version", w.version.toInt())
                 }
                 thenObj.add("warn", wObj)

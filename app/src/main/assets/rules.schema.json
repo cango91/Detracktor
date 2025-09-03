@@ -120,13 +120,16 @@
               "type": "string",
               "minLength": 1
             },
-            "minItems": 1
+            "minItems": 0
           },
           "warn": {
             "$ref": "warnings.schema.json"
           }
         },
-        "required": ["remove"],
+        "anyOf": [
+          { "required": ["remove"] },
+          { "required": ["warn"] }
+        ],
         "additionalProperties": false
       }
     }

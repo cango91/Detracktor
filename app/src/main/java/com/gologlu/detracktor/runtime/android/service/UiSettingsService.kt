@@ -51,6 +51,14 @@ class UiSettingsService(private val repository: UiSettingsRepository) {
     }
     
     /**
+     * Update only the suppress share warnings setting
+     */
+    fun updateSuppressShareWarnings(suppress: Boolean) {
+        val current = getCurrentSettings()
+        updateSettings(current.copy(suppressShareWarnings = suppress))
+    }
+    
+    /**
      * Reset all settings to defaults
      */
     fun resetToDefaults() {

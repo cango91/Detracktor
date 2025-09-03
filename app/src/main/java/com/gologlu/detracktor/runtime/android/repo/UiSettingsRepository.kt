@@ -25,8 +25,8 @@ class UiSettingsRepository(private val context: Context) {
         
         return UiSettings(
             urlPreviewMode = UrlPreviewMode.valueOf(
-                prefs.getString(KEY_URL_PREVIEW_MODE, UrlPreviewMode.CHIPS.name) 
-                    ?: UrlPreviewMode.CHIPS.name
+                prefs.getString(KEY_URL_PREVIEW_MODE, UrlPreviewMode.INLINE_BLUR.name) 
+                    ?: UrlPreviewMode.INLINE_BLUR.name
             ),
             themeMode = ThemeMode.valueOf(
                 prefs.getString(KEY_THEME_MODE, ThemeMode.SYSTEM.name) 
@@ -36,6 +36,7 @@ class UiSettingsRepository(private val context: Context) {
                 prefs.getString(KEY_AFTER_CLEANING_ACTION, AfterCleaningAction.ASK.name) 
                     ?: AfterCleaningAction.ASK.name
             ),
+            suppressShareWarnings = prefs.getBoolean(KEY_SUPPRESS_SHARE_WARNINGS, false),
             version = prefs.getInt(KEY_VERSION, UiSettings.VERSION.toInt()).toUInt()
         )
     }
@@ -48,6 +49,7 @@ class UiSettingsRepository(private val context: Context) {
             .putString(KEY_URL_PREVIEW_MODE, settings.urlPreviewMode.name)
             .putString(KEY_THEME_MODE, settings.themeMode.name)
             .putString(KEY_AFTER_CLEANING_ACTION, settings.afterCleaningAction.name)
+            .putBoolean(KEY_SUPPRESS_SHARE_WARNINGS, settings.suppressShareWarnings)
             .putInt(KEY_VERSION, settings.version.toInt())
             .apply()
     }
@@ -71,6 +73,7 @@ class UiSettingsRepository(private val context: Context) {
         private const val KEY_URL_PREVIEW_MODE = "url_preview_mode"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_AFTER_CLEANING_ACTION = "after_cleaning_action"
+        private const val KEY_SUPPRESS_SHARE_WARNINGS = "suppress_share_warnings"
         private const val KEY_VERSION = "version"
     }
 }

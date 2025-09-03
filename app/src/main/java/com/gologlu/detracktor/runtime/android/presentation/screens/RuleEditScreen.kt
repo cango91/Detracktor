@@ -24,6 +24,7 @@ import com.gologlu.detracktor.application.types.UrlRule
 import com.gologlu.detracktor.runtime.android.CompositionRoot
 import com.gologlu.detracktor.runtime.android.presentation.components.RuleEditDialog
 import com.gologlu.detracktor.runtime.android.presentation.components.RuleListItem
+import com.gologlu.detracktor.runtime.android.presentation.ui.theme.DetracktorTheme
 import kotlinx.coroutines.launch
 
 /**
@@ -138,8 +139,12 @@ fun RuleEditScreen(
                         onRuleDelete = { index ->
                             scope.launch {
                                 val newRules = rules.toMutableList().apply { removeAt(index) }
-                                saveRules(settingsService, newRules) { updatedRules ->
-                                    rules = updatedRules
+                                try {
+                                    saveRules(settingsService, newRules) { updatedRules ->
+                                        rules = updatedRules
+                                    }
+                                } catch (e: Exception) {
+                                    errorMessage = e.message ?: "Failed to save rules"
                                 }
                             }
                         }
@@ -156,9 +161,13 @@ fun RuleEditScreen(
             onSave = { newRule ->
                 scope.launch {
                     val newRules = rules + newRule
-                    saveRules(settingsService, newRules) { updatedRules ->
-                        rules = updatedRules
-                        showAddDialog = false
+                    try {
+                        saveRules(settingsService, newRules) { updatedRules ->
+                            rules = updatedRules
+                            showAddDialog = false
+                        }
+                    } catch (e: Exception) {
+                        errorMessage = e.message ?: "Failed to save rules"
                     }
                 }
             },
@@ -173,9 +182,13 @@ fun RuleEditScreen(
             onSave = { updatedRule ->
                 scope.launch {
                     val newRules = rules.toMutableList().apply { set(index, updatedRule) }
-                    saveRules(settingsService, newRules) { updatedRules ->
-                        rules = updatedRules
-                        editingRule = null
+                    try {
+                        saveRules(settingsService, newRules) { updatedRules ->
+                            rules = updatedRules
+                            editingRule = null
+                        }
+                    } catch (e: Exception) {
+                        errorMessage = e.message ?: "Failed to save rules"
                     }
                 }
             },
@@ -195,14 +208,22 @@ fun RuleEditScreen(
                 TextButton(
                     onClick = {
                         scope.launch {
-                            // For now, just reload the effective settings as a reset
-                            when (val result = settingsService.loadEffective()) {
+                            // Clear user overrides, then load effective (defaults)
+                            when (val resetRes = settingsService.resetUser()) {
                                 is AppResult.Success -> {
-                                    rules = result.value.sites
-                                    showResetDialog = false
+                                    when (val result = settingsService.loadEffective()) {
+                                        is AppResult.Success -> {
+                                            rules = result.value.sites
+                                            showResetDialog = false
+                                        }
+                                        is AppResult.Failure -> {
+                                            errorMessage = "Failed to load defaults after reset: ${result.error}"
+                                            showResetDialog = false
+                                        }
+                                    }
                                 }
                                 is AppResult.Failure -> {
-                                    errorMessage = "Failed to reset: ${result.error}"
+                                    errorMessage = "Failed to reset: ${resetRes.error}"
                                     showResetDialog = false
                                 }
                             }
@@ -413,20 +434,19 @@ private suspend fun saveRules(
     rules: List<UrlRule>,
     onSuccess: (List<UrlRule>) -> Unit
 ) {
-    // This is a simplified implementation - in a real app you'd want proper error handling
-    // and would need to create a complete AppSettings object
     when (val currentResult = settingsService.loadEffective()) {
         is AppResult.Success -> {
             val updatedSettings = currentResult.value.copy(sites = rules)
-            when (settingsService.saveUser(updatedSettings)) {
+            when (val saveResult = settingsService.saveUser(updatedSettings)) {
                 is AppResult.Success -> onSuccess(rules)
                 is AppResult.Failure -> {
-                    // Handle error - could show a snackbar or error dialog
+                    // Bubble the error by throwing; caller shows an error UI
+                    throw RuntimeException("Failed to save rules: ${saveResult.error}")
                 }
             }
         }
         is AppResult.Failure -> {
-            // Handle error loading current settings
+            throw RuntimeException("Failed to load current settings: ${currentResult.error}")
         }
     }
 }

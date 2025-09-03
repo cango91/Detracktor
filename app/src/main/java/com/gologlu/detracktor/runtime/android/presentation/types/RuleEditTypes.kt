@@ -7,26 +7,29 @@ import com.gologlu.detracktor.application.types.*
  * Provides a more user-friendly representation of UrlRule for form editing
  */
 data class RuleEditFormData(
-    val hostPattern: String = "",
-    val subdomainMode: SubdomainMode = SubdomainMode.EXACT,
-    val removePatterns: List<String> = listOf(""),
-    val schemes: List<String> = listOf("http", "https"),
+    val domainsInput: String = "",
+    val subdomainMode: SubdomainMode = SubdomainMode.NONE,
+    val subdomainsInput: String = "",
+    val removePatternsInput: String = "",
     val warnOnCredentials: Boolean = false,
-    val sensitiveParams: List<String> = emptyList(),
-    val metadata: Map<String, String> = emptyMap()
+    val sensitiveParamsInput: String = "",
+    val metadata: Map<String, String> = emptyMap(),
+    val sensitiveMergeMode: SensitiveMergeModeUi = SensitiveMergeModeUi.UNION
 )
 
 /**
- * Simplified subdomain mode for UI selection
+ * Subdomain mode for UI selection matching the actual rule schema
  */
 enum class SubdomainMode {
-    /** Exact host match only */
-    EXACT,
-    /** Include all subdomains (*.example.com) */
-    WILDCARD,
-    /** Global wildcard (*) - matches any domain */
-    ANY
+    /** No subdomains allowed - exact domain match only */
+    NONE,
+    /** Any subdomains allowed (*.example.com) */
+    ANY,
+    /** Specific list of subdomains (comma-separated input) */
+    SPECIFIC_LIST
 }
+
+enum class SensitiveMergeModeUi { UNION, REPLACE }
 
 /**
  * Rule validation result with detailed error and warning messages
@@ -49,19 +52,42 @@ data class PreviewData(
 )
 
 /**
+ * Helper functions for parsing comma-separated inputs
+ */
+fun parseCommaSeparatedList(input: String): List<String> {
+    return input.split(",")
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+}
+
+fun formatCommaSeparatedList(items: List<String>): String {
+    return items.joinToString(", ")
+}
+
+/**
  * Extension functions to convert between form data and domain types
  */
 fun RuleEditFormData.toUrlRule(): UrlRule {
-    val domains = when (subdomainMode) {
-        SubdomainMode.ANY -> Domains.Any
-        SubdomainMode.EXACT -> Domains.ListOf(listOf(hostPattern))
-        SubdomainMode.WILDCARD -> Domains.ListOf(listOf(hostPattern))
-    }
-    
-    val subdomains = when (subdomainMode) {
-        SubdomainMode.ANY -> null
-        SubdomainMode.EXACT -> Subdomains.None
-        SubdomainMode.WILDCARD -> Subdomains.Any
+    val trimmedDomains = domainsInput.trim()
+    val (domains, subdomains) = if (trimmedDomains == "*") {
+        // Catch‑all: domains = Any and subdomains MUST be null per schema
+        Domains.Any to null
+    } else {
+        val domainsList = parseCommaSeparatedList(trimmedDomains)
+        val d = if (domainsList.isEmpty()) {
+            Domains.ListOf(listOf(""))
+        } else {
+            Domains.ListOf(domainsList)
+        }
+        val s = when (subdomainMode) {
+            SubdomainMode.NONE -> Subdomains.None
+            SubdomainMode.ANY -> Subdomains.Any
+            SubdomainMode.SPECIFIC_LIST -> {
+                val subdomainsList = parseCommaSeparatedList(subdomainsInput)
+                if (subdomainsList.isEmpty()) Subdomains.None else Subdomains.OneOf(subdomainsList)
+            }
+        }
+        d to s
     }
     
     val hostCond = HostCond(
@@ -69,21 +95,26 @@ fun RuleEditFormData.toUrlRule(): UrlRule {
         subdomains = subdomains
     )
     
-    val removePatterns = removePatterns
-        .filter { it.isNotBlank() }
+    val removePatterns = parseCommaSeparatedList(removePatternsInput)
         .map { Pattern(it) }
+    
+    val sensitiveParams = parseCommaSeparatedList(sensitiveParamsInput)
     
     val warningSettings = if (warnOnCredentials || sensitiveParams.isNotEmpty()) {
         WarningSettings(
             warnOnEmbeddedCredentials = if (warnOnCredentials) true else null,
-            sensitiveParams = if (sensitiveParams.isNotEmpty()) sensitiveParams else null
+            sensitiveParams = if (sensitiveParams.isNotEmpty()) sensitiveParams else emptyList(),
+            sensitiveMerge = when (sensitiveMergeMode) {
+                SensitiveMergeModeUi.UNION -> SensitiveMergeMode.UNION
+                SensitiveMergeModeUi.REPLACE -> SensitiveMergeMode.REPLACE
+            }
         )
     } else null
     
     return UrlRule(
         when_ = WhenBlock(
             host = hostCond,
-            schemes = if (schemes.isNotEmpty()) schemes else null
+            schemes = null // Remove scheme selection as per plan
         ),
         then = ThenBlock(
             remove = removePatterns,
@@ -97,25 +128,30 @@ fun RuleEditFormData.toUrlRule(): UrlRule {
  * Convert UrlRule back to form data for editing
  */
 fun UrlRule.toFormData(): RuleEditFormData {
-    val hostPattern = when (val domains = when_.host.domains) {
+    val domainsInput = when (val domains = when_.host.domains) {
         is Domains.Any -> "*"
-        is Domains.ListOf -> domains.values.firstOrNull() ?: ""
+        is Domains.ListOf -> formatCommaSeparatedList(domains.values)
     }
     
-    val subdomainMode = when {
-        when_.host.domains is Domains.Any -> SubdomainMode.ANY
-        when_.host.subdomains is Subdomains.Any -> SubdomainMode.WILDCARD
-        else -> SubdomainMode.EXACT
+    val (subdomainMode, subdomainsInput) = when (val subdomains = when_.host.subdomains) {
+        is Subdomains.None -> SubdomainMode.NONE to ""
+        is Subdomains.Any -> SubdomainMode.ANY to ""
+        is Subdomains.OneOf -> SubdomainMode.SPECIFIC_LIST to formatCommaSeparatedList(subdomains.labels)
+        null -> SubdomainMode.NONE to ""
     }
     
     return RuleEditFormData(
-        hostPattern = hostPattern,
+        domainsInput = domainsInput,
         subdomainMode = subdomainMode,
-        removePatterns = then.remove.map { it.pattern }.ifEmpty { listOf("") },
-        schemes = when_.schemes ?: listOf("http", "https"),
+        subdomainsInput = subdomainsInput,
+        removePatternsInput = formatCommaSeparatedList(then.remove.map { it.pattern }),
         warnOnCredentials = then.warn?.warnOnEmbeddedCredentials == true,
-        sensitiveParams = then.warn?.sensitiveParams ?: emptyList(),
-        metadata = metadata?.mapValues { it.value.toString() } ?: emptyMap()
+        sensitiveParamsInput = formatCommaSeparatedList(then.warn?.sensitiveParams ?: emptyList()),
+        metadata = metadata?.mapValues { it.value.toString() } ?: emptyMap(),
+        sensitiveMergeMode = when (then.warn?.sensitiveMerge) {
+            SensitiveMergeMode.REPLACE -> SensitiveMergeModeUi.REPLACE
+            else -> SensitiveMergeModeUi.UNION
+        }
     )
 }
 

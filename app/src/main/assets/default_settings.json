@@ -78,7 +78,7 @@
         }
       },
       "then": {
-        "remove": ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "msclkid", "_ga", "_gl"],
+        "remove": ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "msclkid", "_ga", "_gl", "campaign_*", "source", "medium", "mc_*"],
         "warn": {
           "warnOnEmbeddedCredentials": true,
           "sensitiveParams": ["token", "access_token", "refresh_token", "password", "api_key", "secret"]

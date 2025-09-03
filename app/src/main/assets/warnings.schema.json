@@ -17,6 +17,12 @@
           "type": "string",
           "minLength": 1
         }
+      },
+      "sensitiveMerge": {
+        "type": "string",
+        "enum": ["UNION", "REPLACE"],
+        "description": "How to combine with lower-priority sensitiveParams: UNION merges; REPLACE overrides",
+        "default": "UNION"
       }
     },
     "additionalProperties": false

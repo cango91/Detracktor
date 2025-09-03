@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gologlu.detracktor.application.types.UrlRule
 import com.gologlu.detracktor.runtime.android.presentation.types.getDescription
+import com.gologlu.detracktor.runtime.android.presentation.ui.theme.DetracktorTheme
 
 /**
  * Individual rule display component with edit/delete actions
@@ -223,20 +224,39 @@ private fun RuleDetailRow(
 }
 
 /**
- * Get display text for host pattern
+ * Get display text for host pattern with proper multiple domain support
  */
 private fun getHostDisplayText(rule: UrlRule): String {
     return when (val domains = rule.when_.host.domains) {
         is com.gologlu.detracktor.application.types.Domains.Any -> "All domains (*)"
         is com.gologlu.detracktor.application.types.Domains.ListOf -> {
-            val host = domains.values.firstOrNull() ?: "unknown"
-            when (rule.when_.host.subdomains) {
-                is com.gologlu.detracktor.application.types.Subdomains.Any -> "*.${host}"
-                is com.gologlu.detracktor.application.types.Subdomains.None -> host
+            val domainList = domains.values.filter { it.isNotBlank() }
+            if (domainList.isEmpty()) return "No domains specified"
+            
+            val subdomainPrefix = when (rule.when_.host.subdomains) {
+                is com.gologlu.detracktor.application.types.Subdomains.Any -> "*."
+                is com.gologlu.detracktor.application.types.Subdomains.None -> ""
                 is com.gologlu.detracktor.application.types.Subdomains.OneOf -> {
-                    "${rule.when_.host.subdomains.labels.joinToString("|")}.${host}"
+                    val labels = rule.when_.host.subdomains.labels.filter { it.isNotBlank() }
+                    if (labels.isEmpty()) "" else "${labels.joinToString("|")}."
                 }
-                null -> host
+                null -> ""
+            }
+            
+            // Format domains with subdomain prefix
+            val formattedDomains = domainList.map { domain ->
+                if (subdomainPrefix.isNotEmpty()) {
+                    "$subdomainPrefix$domain"
+                } else {
+                    domain
+                }
+            }
+            
+            // Show multiple domains appropriately
+            when {
+                formattedDomains.size == 1 -> formattedDomains.first()
+                formattedDomains.size <= 3 -> formattedDomains.joinToString(", ")
+                else -> "${formattedDomains.take(2).joinToString(", ")}, +${formattedDomains.size - 2} more"
             }
         }
     }

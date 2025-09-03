@@ -10,9 +10,12 @@ data class AppSettings(
     }
 }
 
+enum class SensitiveMergeMode { UNION, REPLACE }
+
 data class WarningSettings(
     val warnOnEmbeddedCredentials: Boolean? = null,
     val sensitiveParams: List<String>? = null,
+    val sensitiveMerge: SensitiveMergeMode? = null,
     val version: UInt = VERSION
 ){
     init { require(version <= VERSION && version >= 1U) { "version must be <= $VERSION and >= 1" } }

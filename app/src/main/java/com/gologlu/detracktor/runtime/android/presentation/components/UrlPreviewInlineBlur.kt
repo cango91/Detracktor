@@ -18,7 +18,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gologlu.detracktor.application.service.match.TokenEffect
 import com.gologlu.detracktor.domain.model.QueryToken
+import com.gologlu.detracktor.runtime.android.presentation.types.TokenEffectType
 import com.gologlu.detracktor.domain.model.UrlParts
+import com.gologlu.detracktor.runtime.android.presentation.ui.theme.DetracktorTheme
+import com.gologlu.detracktor.runtime.android.presentation.utils.BlurStateCalculator
 
 /**
  * URL preview component using inline blur effects for query parameters.
@@ -151,7 +154,7 @@ private fun buildInlineBlurredUrl(
 }
 
 /**
- * Render URL components as separate Text elements in FlowRow for blur effects
+ * Render URL components as separate Text elements in FlowRow for blur and masking effects
  */
 @Composable
 private fun renderInlineUrlComponents(
@@ -163,22 +166,29 @@ private fun renderInlineUrlComponents(
 ) {
     val tokens: List<QueryToken> = parts.queryPairs.getTokens()
     val effectsByIndex = tokenEffects.associateBy { it.tokenIndex }
+    val colors = DetracktorTheme.colors
     
     // Scheme
     parts.scheme?.let { scheme ->
         Text(
             text = "$scheme://",
-            color = muted,
+            color = colors.urlScheme,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("scheme")
         )
     }
     
-    // UserInfo
+    // UserInfo (credentials) - always mask and blur when blur is enabled
     parts.userInfo?.let { ui ->
+        val displayText = if (blurEnabled) {
+            BlurStateCalculator.generateMask(ui)
+        } else {
+            "$ui@"
+        }
+        
         Text(
-            text = "$ui@",
-            color = muted,
+            text = displayText,
+            color = colors.urlCredentials,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier
                 .testTag("userinfo")
@@ -190,7 +200,7 @@ private fun renderInlineUrlComponents(
     parts.host?.let { host ->
         Text(
             text = host,
-            color = muted,
+            color = colors.urlHost,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("host")
         )
@@ -200,7 +210,7 @@ private fun renderInlineUrlComponents(
     parts.port?.let { port ->
         Text(
             text = ":$port",
-            color = muted,
+            color = colors.urlHost,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("port")
         )
@@ -210,7 +220,7 @@ private fun renderInlineUrlComponents(
     parts.path?.let { path ->
         Text(
             text = path,
-            color = muted,
+            color = colors.urlPath,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("path")
         )
@@ -220,7 +230,7 @@ private fun renderInlineUrlComponents(
     if (tokens.isNotEmpty()) {
         Text(
             text = "?",
-            color = muted,
+            color = colors.urlQuery,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("query-start")
         )
@@ -229,42 +239,77 @@ private fun renderInlineUrlComponents(
             if (idx > 0) {
                 Text(
                     text = "&",
-                    color = muted,
+                    color = colors.urlQuery,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.testTag("query-separator-$idx")
                 )
             }
             
-            val eff = effectsByIndex[idx]
-            val isRemoval = eff?.willBeRemoved == true
-            val keyColor = if (isRemoval) highlight else muted
-            val valueColor = if (isRemoval) highlight else muted
+            val tokenEffect = effectsByIndex[idx]
+            val effectType = if (tokenEffect != null) {
+                BlurStateCalculator.getTokenEffectType(tokenEffect)
+            } else {
+                // If there is no explicit token effect (e.g., no rule matched),
+                // treat this as a non-matching parameter so it will be blurred
+                // when blur is enabled.
+                TokenEffectType.NON_MATCHING
+            }
+            val isRemoval = tokenEffect?.willBeRemoved == true
+            val shouldMask = BlurStateCalculator.shouldMaskToken(effectType, blurEnabled)
+            
+            // Determine colors based on token effect
+            val keyColor = when (effectType) {
+                TokenEffectType.REMOVED -> highlight
+                TokenEffectType.SENSITIVE_PARAM, TokenEffectType.WARNING -> colors.sensitiveContent
+                TokenEffectType.CREDENTIALS -> colors.urlCredentials
+                else -> colors.urlQuery
+            }
+            
+            val valueColor = when (effectType) {
+                TokenEffectType.REMOVED -> highlight
+                TokenEffectType.SENSITIVE_PARAM, TokenEffectType.WARNING -> colors.sensitiveContent
+                TokenEffectType.CREDENTIALS -> colors.urlCredentials
+                else -> colors.urlQuery
+            }
             
             // Parameter key
+            val keyText = if (shouldMask) {
+                BlurStateCalculator.generateMask(tok.decodedKey)
+            } else {
+                tok.decodedKey
+            }
+            
             Text(
-                text = tok.decodedKey,
+                text = keyText,
                 color = keyColor,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.testTag("param-key-$idx")
+                modifier = Modifier
+                    .testTag("param-key-$idx")
+                    .then(if (shouldMask) Modifier.blur(4.dp) else Modifier)
             )
             
             if (tok.hasEquals) {
                 Text(
                     text = "=",
-                    color = muted,
+                    color = colors.urlQuery,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.testTag("param-equals-$idx")
                 )
                 
-                // Parameter value with blur effect
-                val shouldBlurValue = blurEnabled && !isRemoval
+                // Parameter value with masking and blur effects
+                val valueText = if (shouldMask) {
+                    BlurStateCalculator.generateMask(tok.decodedValue)
+                } else {
+                    tok.decodedValue
+                }
+                
                 Text(
-                    text = tok.decodedValue,
+                    text = valueText,
                     color = valueColor,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier
                         .testTag("param-value-$idx")
-                        .then(if (shouldBlurValue) Modifier.blur(4.dp) else Modifier)
+                        .then(if (shouldMask) Modifier.blur(4.dp) else Modifier)
                 )
             }
         }
@@ -274,15 +319,33 @@ private fun renderInlineUrlComponents(
     parts.fragment?.let { fragment ->
         Text(
             text = "#",
-            color = muted,
+            color = colors.urlFragment,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("fragment-start")
         )
         Text(
             text = fragment,
-            color = muted,
+            color = colors.urlFragment,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("fragment")
         )
+    }
+}
+
+/**
+ * Helper function to determine if a value should be masked based on token effect
+ */
+private fun shouldMaskValue(tokenEffectType: TokenEffectType, blurEnabled: Boolean): Boolean {
+    return BlurStateCalculator.shouldMaskToken(tokenEffectType, blurEnabled)
+}
+
+/**
+ * Helper function to get the appropriate display text (masked or original)
+ */
+private fun getDisplayText(originalText: String, shouldMask: Boolean): String {
+    return if (shouldMask) {
+        BlurStateCalculator.generateMask(originalText)
+    } else {
+        originalText
     }
 }

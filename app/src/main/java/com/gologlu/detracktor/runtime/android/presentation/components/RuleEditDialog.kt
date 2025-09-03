@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.gologlu.detracktor.application.types.UrlRule
 import com.gologlu.detracktor.runtime.android.presentation.types.*
+import com.gologlu.detracktor.runtime.android.presentation.ui.theme.DetracktorTheme
 import com.gologlu.detracktor.runtime.android.presentation.utils.RuleFormValidator
 
 /**
@@ -59,32 +61,36 @@ fun RuleEditDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Host Pattern Section
-                HostPatternSection(
-                    hostPattern = formData.hostPattern,
-                    subdomainMode = formData.subdomainMode,
-                    onHostPatternChange = { formData = formData.copy(hostPattern = it) },
-                    onSubdomainModeChange = { formData = formData.copy(subdomainMode = it) }
+                // Domains Section
+                DomainsSection(
+                    domainsInput = formData.domainsInput,
+                    onDomainsInputChange = { formData = formData.copy(domainsInput = it) }
                 )
+                
+                // Subdomain Mode Section (hidden when catch-all domain "*")
+                if (formData.domainsInput.trim() != "*") {
+                    SubdomainModeSection(
+                        subdomainMode = formData.subdomainMode,
+                        subdomainsInput = formData.subdomainsInput,
+                        onSubdomainModeChange = { formData = formData.copy(subdomainMode = it) },
+                        onSubdomainsInputChange = { formData = formData.copy(subdomainsInput = it) }
+                    )
+                }
                 
                 // Remove Patterns Section
                 RemovePatternsSection(
-                    patterns = formData.removePatterns,
-                    onPatternsChange = { formData = formData.copy(removePatterns = it) }
-                )
-                
-                // Schemes Section
-                SchemesSection(
-                    schemes = formData.schemes,
-                    onSchemesChange = { formData = formData.copy(schemes = it) }
+                    removePatternsInput = formData.removePatternsInput,
+                    onRemovePatternsInputChange = { formData = formData.copy(removePatternsInput = it) }
                 )
                 
                 // Warning Settings Section
                 WarningSettingsSection(
                     warnOnCredentials = formData.warnOnCredentials,
-                    sensitiveParams = formData.sensitiveParams,
+                    sensitiveParamsInput = formData.sensitiveParamsInput,
+                    mergeMode = formData.sensitiveMergeMode,
                     onWarnOnCredentialsChange = { formData = formData.copy(warnOnCredentials = it) },
-                    onSensitiveParamsChange = { formData = formData.copy(sensitiveParams = it) }
+                    onSensitiveParamsInputChange = { formData = formData.copy(sensitiveParamsInput = it) },
+                    onMergeModeChange = { formData = formData.copy(sensitiveMergeMode = it) }
                 )
                 
                 // Validation Results
@@ -118,72 +124,143 @@ fun RuleEditDialog(
 }
 
 @Composable
-private fun HostPatternSection(
-    hostPattern: String,
-    subdomainMode: SubdomainMode,
-    onHostPatternChange: (String) -> Unit,
-    onSubdomainModeChange: (SubdomainMode) -> Unit
+private fun DomainsSection(
+    domainsInput: String,
+    onDomainsInputChange: (String) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Host Pattern",
+            text = "Domains",
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            color = DetracktorTheme.colors.onSurface
         )
         
-        // Subdomain Mode Selection
+        OutlinedTextField(
+            value = domainsInput,
+            onValueChange = onDomainsInputChange,
+            label = { Text("Domains (comma-separated)") },
+            placeholder = { Text("example.com, test.org") },
+            supportingText = { 
+                Text(
+                    "Enter one or more domains separated by commas",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DetracktorTheme.colors.onSurfaceVariant
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("domains-input"),
+            singleLine = false,
+            maxLines = 3
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SubdomainModeSection(
+    subdomainMode: SubdomainMode,
+    subdomainsInput: String,
+    onSubdomainModeChange: (SubdomainMode) -> Unit,
+    onSubdomainsInputChange: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Text(
             text = "Subdomain Mode",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Medium,
+            color = DetracktorTheme.colors.onSurface
         )
         
-        Column {
-            SubdomainMode.values().forEach { mode ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.testTag("subdomain-mode-${mode.name.lowercase()}")
-                ) {
-                    RadioButton(
-                        selected = subdomainMode == mode,
-                        onClick = { onSubdomainModeChange(mode) }
+        // Dropdown for subdomain mode
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier.testTag("subdomain-mode-dropdown")
+        ) {
+            OutlinedTextField(
+                value = when (subdomainMode) {
+                    SubdomainMode.NONE -> "None"
+                    SubdomainMode.ANY -> "Any"
+                    SubdomainMode.SPECIFIC_LIST -> "Specific List"
+                },
+                onValueChange = { },
+                readOnly = true,
+                label = { Text("Subdomain Mode") },
+                trailingIcon = {
+                    Icon(
+                        Icons.Default.ArrowDropDown,
+                        contentDescription = "Dropdown"
                     )
-                    Column(modifier = Modifier.padding(start = 8.dp)) {
-                        Text(
-                            text = when (mode) {
-                                SubdomainMode.EXACT -> "Exact match"
-                                SubdomainMode.WILDCARD -> "Include subdomains"
-                                SubdomainMode.ANY -> "All domains"
-                            },
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = when (mode) {
-                                SubdomainMode.EXACT -> "example.com only"
-                                SubdomainMode.WILDCARD -> "*.example.com"
-                                SubdomainMode.ANY -> "Global rule"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                SubdomainMode.values().forEach { mode ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(
+                                    text = when (mode) {
+                                        SubdomainMode.NONE -> "None"
+                                        SubdomainMode.ANY -> "Any"
+                                        SubdomainMode.SPECIFIC_LIST -> "Specific List"
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = when (mode) {
+                                        SubdomainMode.NONE -> "Exact domain match only"
+                                        SubdomainMode.ANY -> "Include all subdomains (*.domain.com)"
+                                        SubdomainMode.SPECIFIC_LIST -> "Only specified subdomains"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DetracktorTheme.colors.onSurfaceVariant
+                                )
+                            }
+                        },
+                        onClick = {
+                            onSubdomainModeChange(mode)
+                            expanded = false
+                        },
+                        modifier = Modifier.testTag("subdomain-mode-${mode.name.lowercase()}")
+                    )
                 }
             }
         }
         
-        // Host Pattern Input (conditional)
-        if (subdomainMode != SubdomainMode.ANY) {
+        // Specific subdomains input (conditional)
+        if (subdomainMode == SubdomainMode.SPECIFIC_LIST) {
             OutlinedTextField(
-                value = hostPattern,
-                onValueChange = onHostPatternChange,
-                label = { Text("Domain") },
-                placeholder = { Text("example.com") },
+                value = subdomainsInput,
+                onValueChange = onSubdomainsInputChange,
+                label = { Text("Subdomains (comma-separated)") },
+                placeholder = { Text("www, api, cdn") },
+                supportingText = { 
+                    Text(
+                        "Enter subdomain names without dots (e.g., www, api, cdn)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = DetracktorTheme.colors.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("host-pattern-input"),
-                singleLine = true
+                    .testTag("subdomains-input"),
+                singleLine = false,
+                maxLines = 2
             )
         }
     }
@@ -191,201 +268,160 @@ private fun HostPatternSection(
 
 @Composable
 private fun RemovePatternsSection(
-    patterns: List<String>,
-    onPatternsChange: (List<String>) -> Unit
+    removePatternsInput: String,
+    onRemovePatternsInputChange: (String) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Remove Patterns",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium
-            )
-            
-            IconButton(
-                onClick = { onPatternsChange(patterns + "") },
-                modifier = Modifier.testTag("add-pattern-button")
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add pattern")
-            }
-        }
-        
         Text(
-            text = "Glob patterns for parameters to remove (e.g., utm_*, gclid)",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            text = "Remove Patterns",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Medium,
+            color = DetracktorTheme.colors.onSurface
         )
         
-        patterns.forEachIndexed { index, pattern ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = pattern,
-                    onValueChange = { newValue ->
-                        val newPatterns = patterns.toMutableList()
-                        newPatterns[index] = newValue
-                        onPatternsChange(newPatterns)
-                    },
-                    label = { Text("Pattern ${index + 1}") },
-                    placeholder = { Text("utm_*") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("remove-pattern-$index"),
-                    singleLine = true
+        OutlinedTextField(
+            value = removePatternsInput,
+            onValueChange = onRemovePatternsInputChange,
+            label = { Text("Patterns (comma-separated)") },
+            placeholder = { Text("utm_*, gclid, fbclid") },
+            supportingText = { 
+                Text(
+                    "Glob patterns for parameters to remove (e.g., utm_*, gclid)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DetracktorTheme.colors.onSurfaceVariant
                 )
-                
-                if (patterns.size > 1) {
-                    IconButton(
-                        onClick = {
-                            val newPatterns = patterns.toMutableList()
-                            newPatterns.removeAt(index)
-                            onPatternsChange(newPatterns)
-                        },
-                        modifier = Modifier.testTag("delete-pattern-$index")
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete pattern")
-                    }
-                }
-            }
-        }
-        
-        // Quick selection chips
-        Text(
-            text = "Common patterns:",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("remove-patterns-input"),
+            singleLine = false,
+            maxLines = 3
         )
         
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            RuleFormValidator.COMMON_TRACKING_PATTERNS.take(3).forEach { commonPattern ->
-                FilterChip(
-                    onClick = {
-                        if (!patterns.contains(commonPattern)) {
-                            val newPatterns = patterns.toMutableList()
-                            val firstEmpty = newPatterns.indexOfFirst { it.isBlank() }
-                            if (firstEmpty >= 0) {
-                                newPatterns[firstEmpty] = commonPattern
-                            } else {
-                                newPatterns.add(commonPattern)
-                            }
-                            onPatternsChange(newPatterns)
-                        }
-                    },
-                    label = { Text(commonPattern, style = MaterialTheme.typography.labelSmall) },
-                    selected = patterns.contains(commonPattern),
-                    modifier = Modifier.testTag("common-pattern-$commonPattern")
-                )
-            }
-        }
+        // Hint text for common patterns
+        Text(
+            text = "Common patterns: ${RuleFormValidator.COMMON_TRACKING_PATTERNS.take(6).joinToString(", ")}",
+            style = MaterialTheme.typography.bodySmall,
+            color = DetracktorTheme.colors.onSurfaceVariant
+        )
     }
 }
 
-@Composable
-private fun SchemesSection(
-    schemes: List<String>,
-    onSchemesChange: (List<String>) -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "URL Schemes",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Medium
-        )
-        
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf("http", "https").forEach { scheme ->
-                FilterChip(
-                    onClick = {
-                        val newSchemes = if (schemes.contains(scheme)) {
-                            schemes - scheme
-                        } else {
-                            schemes + scheme
-                        }
-                        onSchemesChange(newSchemes)
-                    },
-                    label = { Text(scheme.uppercase()) },
-                    selected = schemes.contains(scheme),
-                    modifier = Modifier.testTag("scheme-$scheme")
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun WarningSettingsSection(
     warnOnCredentials: Boolean,
-    sensitiveParams: List<String>,
+    sensitiveParamsInput: String,
+    mergeMode: SensitiveMergeModeUi,
     onWarnOnCredentialsChange: (Boolean) -> Unit,
-    onSensitiveParamsChange: (List<String>) -> Unit
+    onSensitiveParamsInputChange: (String) -> Unit,
+    onMergeModeChange: (SensitiveMergeModeUi) -> Unit
 ) {
+    var showWarnings by remember { mutableStateOf(warnOnCredentials || sensitiveParamsInput.isNotBlank()) }
+    
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Warning Settings",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Medium
-        )
-        
-        // Warn on credentials checkbox
+        // Warning Settings Toggle
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.testTag("warn-credentials-row")
+            modifier = Modifier.testTag("warning-settings-toggle")
         ) {
-            Checkbox(
-                checked = warnOnCredentials,
-                onCheckedChange = onWarnOnCredentialsChange
+            Switch(
+                checked = showWarnings,
+                onCheckedChange = { 
+                    showWarnings = it
+                    if (!it) {
+                        onWarnOnCredentialsChange(false)
+                        onSensitiveParamsInputChange("")
+                    } else {
+                        // Default "warn on embed creds" to true when warnings are enabled
+                        onWarnOnCredentialsChange(true)
+                    }
+                }
             )
             Text(
-                text = "Warn on embedded credentials",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "Warning Settings",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                color = DetracktorTheme.colors.onSurface,
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
         
-        // Sensitive parameters
-        Text(
-            text = "Sensitive Parameters (optional)",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        )
-        
-        // Quick selection for sensitive params
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            RuleFormValidator.COMMON_SENSITIVE_PARAMS.take(3).forEach { param ->
-                FilterChip(
-                    onClick = {
-                        val newParams = if (sensitiveParams.contains(param)) {
-                            sensitiveParams - param
-                        } else {
-                            sensitiveParams + param
-                        }
-                        onSensitiveParamsChange(newParams)
-                    },
-                    label = { Text(param, style = MaterialTheme.typography.labelSmall) },
-                    selected = sensitiveParams.contains(param),
-                    modifier = Modifier.testTag("sensitive-param-$param")
+        if (showWarnings) {
+            // Warn on credentials checkbox
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .testTag("warn-credentials-row")
+            ) {
+                Checkbox(
+                    checked = warnOnCredentials,
+                    onCheckedChange = onWarnOnCredentialsChange
                 )
+                Text(
+                    text = "Warn on embedded credentials",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+            
+            // Sensitive parameters input
+            Column(
+                modifier = Modifier.padding(start = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = sensitiveParamsInput,
+                    onValueChange = onSensitiveParamsInputChange,
+                    label = { Text("Sensitive Parameters (comma-separated)") },
+                    placeholder = { Text("token, key, password") },
+                    supportingText = { 
+                        Text(
+                            "Parameters that should trigger warnings when present",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DetracktorTheme.colors.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("sensitive-params-input"),
+                    singleLine = false,
+                    maxLines = 2
+                )
+                
+                // Hint text for sensitive parameters
+                Text(
+                    text = "Common sensitive parameters: ${RuleFormValidator.COMMON_SENSITIVE_PARAMS.take(6).joinToString(", ")}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DetracktorTheme.colors.onSurfaceVariant
+                )
+
+                // Merge mode selector
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.testTag("sensitive-merge-row")
+                ) {
+                    Text(
+                        text = "Merge behavior:",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    FilterChip(
+                        selected = mergeMode == SensitiveMergeModeUi.UNION,
+                        onClick = { onMergeModeChange(SensitiveMergeModeUi.UNION) },
+                        label = { Text("Union") }
+                    )
+                    FilterChip(
+                        selected = mergeMode == SensitiveMergeModeUi.REPLACE,
+                        onClick = { onMergeModeChange(SensitiveMergeModeUi.REPLACE) },
+                        label = { Text("Replace") }
+                    )
+                }
             }
         }
     }

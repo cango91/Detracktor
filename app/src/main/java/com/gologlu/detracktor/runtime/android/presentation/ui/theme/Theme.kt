@@ -8,28 +8,64 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import com.gologlu.detracktor.runtime.android.presentation.types.DetracktorColors
+import com.gologlu.detracktor.runtime.android.presentation.types.DarkDetracktorColors
+import com.gologlu.detracktor.runtime.android.presentation.types.LightDetracktorColors
+
+/**
+ * CompositionLocal for accessing Detracktor-specific colors throughout the app
+ */
+val LocalDetracktorColors = staticCompositionLocalOf<DetracktorColors> {
+    error("No DetracktorColors provided")
+}
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = DarkDetracktorColors.primary,
+    onPrimary = DarkDetracktorColors.onPrimary,
+    primaryContainer = DarkDetracktorColors.primaryContainer,
+    onPrimaryContainer = DarkDetracktorColors.onPrimaryContainer,
+    secondary = DarkDetracktorColors.secondary,
+    onSecondary = DarkDetracktorColors.onSecondary,
+    secondaryContainer = DarkDetracktorColors.secondaryContainer,
+    onSecondaryContainer = DarkDetracktorColors.onSecondaryContainer,
+    surface = DarkDetracktorColors.surface,
+    onSurface = DarkDetracktorColors.onSurface,
+    surfaceVariant = DarkDetracktorColors.surfaceVariant,
+    onSurfaceVariant = DarkDetracktorColors.onSurfaceVariant,
+    background = DarkDetracktorColors.background,
+    onBackground = DarkDetracktorColors.onBackground,
+    error = DarkDetracktorColors.error,
+    onError = DarkDetracktorColors.onError,
+    errorContainer = DarkDetracktorColors.errorContainer,
+    onErrorContainer = DarkDetracktorColors.onErrorContainer,
+    outline = DarkDetracktorColors.outline,
+    outlineVariant = DarkDetracktorColors.outlineVariant
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = LightDetracktorColors.primary,
+    onPrimary = LightDetracktorColors.onPrimary,
+    primaryContainer = LightDetracktorColors.primaryContainer,
+    onPrimaryContainer = LightDetracktorColors.onPrimaryContainer,
+    secondary = LightDetracktorColors.secondary,
+    onSecondary = LightDetracktorColors.onSecondary,
+    secondaryContainer = LightDetracktorColors.secondaryContainer,
+    onSecondaryContainer = LightDetracktorColors.onSecondaryContainer,
+    surface = LightDetracktorColors.surface,
+    onSurface = LightDetracktorColors.onSurface,
+    surfaceVariant = LightDetracktorColors.surfaceVariant,
+    onSurfaceVariant = LightDetracktorColors.onSurfaceVariant,
+    background = LightDetracktorColors.background,
+    onBackground = LightDetracktorColors.onBackground,
+    error = LightDetracktorColors.error,
+    onError = LightDetracktorColors.onError,
+    errorContainer = LightDetracktorColors.errorContainer,
+    onErrorContainer = LightDetracktorColors.onErrorContainer,
+    outline = LightDetracktorColors.outline,
+    outlineVariant = LightDetracktorColors.outlineVariant
 )
 
 @Composable
@@ -49,11 +85,15 @@ fun DetracktorTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val detracktorColors = if (darkTheme) DarkDetracktorColors else LightDetracktorColors
+
+    CompositionLocalProvider(LocalDetracktorColors provides detracktorColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
 
 /**
@@ -77,4 +117,13 @@ fun DetracktorTheme(
         dynamicColor = dynamicColor,
         content = content
     )
+}
+
+/**
+ * Access Detracktor-specific colors from any composable within DetracktorTheme
+ */
+object DetracktorTheme {
+    val colors: DetracktorColors
+        @Composable
+        get() = LocalDetracktorColors.current
 }

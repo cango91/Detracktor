@@ -6,13 +6,14 @@ package com.gologlu.detracktor.runtime.android.presentation.types
  * that are separate from the application-layer settings.
  */
 data class UiSettings(
-    val urlPreviewMode: UrlPreviewMode = UrlPreviewMode.CHIPS,
+    val urlPreviewMode: UrlPreviewMode = UrlPreviewMode.INLINE_BLUR,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val afterCleaningAction: AfterCleaningAction = AfterCleaningAction.ASK,
+    val suppressShareWarnings: Boolean = false,
     val version: UInt = VERSION
 ) {
     companion object {
-        const val VERSION: UInt = 1U
+        const val VERSION: UInt = 2U
     }
 }
 
@@ -20,9 +21,7 @@ data class UiSettings(
  * URL preview display modes
  */
 enum class UrlPreviewMode {
-    /** Current chip-based display with parameters shown as chips below URL */
-    CHIPS,
-    /** New inline blur-based display with parameters integrated into URL text */
+    /** Unified inline blur-based display with parameters integrated into URL text and masking support */
     INLINE_BLUR
 }
 
@@ -49,3 +48,23 @@ enum class AfterCleaningAction {
     /** Ask user what to do with cleaned URL (current behavior) */
     ASK
 }
+
+/**
+ * Dialog types to distinguish between manual cleaning and share-intent dialogs
+ */
+enum class DialogType {
+    /** Dialog shown after manual URL cleaning */
+    MANUAL_CLEANING,
+    /** Dialog shown for share-intent warnings */
+    SHARE_INTENT_WARNING
+}
+
+/**
+ * Dialog state data class for managing dialog visibility and content
+ */
+data class DialogState(
+    val isVisible: Boolean = false,
+    val type: DialogType = DialogType.MANUAL_CLEANING,
+    val cleanedUrl: String? = null,
+    val warningData: WarningDisplayData? = null
+)

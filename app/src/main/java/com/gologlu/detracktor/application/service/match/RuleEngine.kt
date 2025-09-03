@@ -5,6 +5,7 @@ import com.gologlu.detracktor.application.types.AppSettings
 import com.gologlu.detracktor.application.types.Domains
 import com.gologlu.detracktor.application.types.ThenBlock
 import com.gologlu.detracktor.application.types.WarningSettings
+import com.gologlu.detracktor.application.types.SensitiveMergeMode
 import com.gologlu.detracktor.domain.model.QueryPairs
 import com.gologlu.detracktor.domain.model.QueryToken
 import com.gologlu.detracktor.domain.model.UrlParts
@@ -112,9 +113,17 @@ class DefaultRuleEngine : RuleEngine {
 
         var result = catchAll
         for (ov in specifics) {
+            val nextSensitive = when (ov.sensitiveMerge ?: SensitiveMergeMode.REPLACE) {
+                SensitiveMergeMode.REPLACE -> ov.sensitiveParams
+                SensitiveMergeMode.UNION -> {
+                    if (ov.sensitiveParams == null) result.sensitiveParams
+                    else ((result.sensitiveParams ?: emptyList()) + ov.sensitiveParams).distinct()
+                }
+            }
             result = WarningSettings(
                 warnOnEmbeddedCredentials = ov.warnOnEmbeddedCredentials ?: result.warnOnEmbeddedCredentials,
-                sensitiveParams = ov.sensitiveParams ?: result.sensitiveParams,
+                sensitiveParams = nextSensitive,
+                sensitiveMerge = ov.sensitiveMerge ?: result.sensitiveMerge,
                 version = maxOf(result.version, ov.version)
             )
         }

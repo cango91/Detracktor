@@ -46,7 +46,8 @@ jobs:
     - name: Run unit tests
       run: ./gradlew test --continue
 
-
+    - name: Generate unit test coverage report
+      run: ./gradlew jacocoTestReport
 
     - name: Run lint
       run: ./gradlew lint
@@ -76,6 +77,15 @@ jobs:
         name: debug-apk
         path: app/build/outputs/apk/debug/app-debug.apk
         retention-days: 7
+
+    - name: Upload unit test coverage data
+      uses: actions/upload-artifact@v4
+      with:
+        name: unit-test-coverage
+        path: |
+          app/build/reports/jacoco/jacocoTestReport/
+          app/build/outputs/unit_test_code_coverage/
+        retention-days: 1
 
   # Matrix instrumented tests for minSdk and targetSdk
   instrumented-tests:
@@ -116,6 +126,12 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+
+    - name: Download unit test coverage data
+      uses: actions/download-artifact@v4
+      with:
+        name: unit-test-coverage
+        path: app/build/
 
     - name: Enable KVM group perms
       run: |
@@ -166,26 +182,29 @@ jobs:
       run: |
         pkill -f emulator || true
         pkill -f qemu || true
-        
+
+    - name: Generate full coverage report (unit + instrumented)
+      run: ./gradlew jacocoFullReport
+
     - name: Check coverage report exists
       id: coverage-check
       run: |
-        if [ -f "./app/build/reports/coverage/androidTest/debug/connected/report.xml" ]; then
+        if [ -f "./app/build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml" ]; then
           echo "coverage_exists=true" >> $GITHUB_OUTPUT
-          echo "Coverage report found"
+          echo "Full coverage report found"
         else
           echo "coverage_exists=false" >> $GITHUB_OUTPUT
-          echo "Coverage report not found"
+          echo "Full coverage report not found"
         fi
 
-    - name: Upload coverage to Codecov
+    - name: Upload full coverage to Codecov
       if: steps.coverage-check.outputs.coverage_exists == 'true'
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./app/build/reports/coverage/androidTest/debug/connected/report.xml
-        flags: instrumented-tests
-        name: codecov-instrumented-${{ matrix.api-level }}
+        files: ./app/build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml
+        flags: full-coverage
+        name: codecov-full-${{ matrix.api-level }}
         fail_ci_if_error: false
         verbose: true
 

@@ -175,10 +175,12 @@ tasks.register<JacocoReport>("jacocoFullReport") {
 
     sourceDirectories.setFrom(files(mainSrc, kotlinSrc))
     classDirectories.setFrom(files(debugTree))
+    
+    // Use wildcard pattern to find coverage files regardless of emulator config
     executionData.setFrom(fileTree(layout.buildDirectory.get()) {
         include(
             "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-            "outputs/code_coverage/debugAndroidTest/connected/coverage.ec"
+            "outputs/code_coverage/debugAndroidTest/connected/**/coverage.ec"
         )
     })
 }

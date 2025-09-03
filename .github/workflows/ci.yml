@@ -165,7 +165,7 @@ jobs:
           echo "Generated AVD snapshot for caching."
           adb shell input keyevent 82
 
-    - name: Run instrumented tests
+    - name: Run instrumented tests and generate coverage
       timeout-minutes: 30
       uses: reactivecircus/android-emulator-runner@v2
       with:
@@ -175,16 +175,18 @@ jobs:
         force-avd-creation: false
         emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -memory 2048
         disable-animations: true
-        script: ./gradlew connectedAndroidTest
+        script: |
+          ./gradlew connectedAndroidTest
+          ./gradlew createDebugCoverageReport
+
+    - name: Generate full coverage report (unit + instrumented)
+      run: ./gradlew jacocoFullReport
 
     - name: Force cleanup emulator processes
       if: always()
       run: |
         pkill -f emulator || true
         pkill -f qemu || true
-
-    - name: Generate full coverage report (unit + instrumented)
-      run: ./gradlew jacocoFullReport
 
     - name: Check coverage report exists
       id: coverage-check

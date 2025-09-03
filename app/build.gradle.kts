@@ -94,8 +94,6 @@ dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     
     testImplementation(libs.junit)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.inline)  // Enhanced mocking for new functionality
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.junit)

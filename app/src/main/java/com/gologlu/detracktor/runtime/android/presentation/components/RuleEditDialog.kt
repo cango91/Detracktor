@@ -340,7 +340,8 @@ private fun WarningSettingsSection(
                         // Default "warn on embed creds" to true when warnings are enabled
                         onWarnOnCredentialsChange(true)
                     }
-                }
+                },
+                modifier = Modifier.testTag("warning-settings-switch")
             )
             Text(
                 text = "Warning Settings",

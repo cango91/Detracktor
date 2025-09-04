@@ -186,8 +186,8 @@ tasks.register<JacocoReport>("jacocoFullReport") {
         "**/*Test*.*",
         "android/**/*.*",
         "**/databinding/**/*.*",
-        "**/generated/**/*.*",
-        "**/compose/**/*.*"
+        "**/generated/**/*.*"
+        // Remove compose filter to include compose coverage
     )
 
     val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
@@ -199,13 +199,26 @@ tasks.register<JacocoReport>("jacocoFullReport") {
     sourceDirectories.setFrom(files(mainSrc, kotlinSrc))
     classDirectories.setFrom(files(debugTree))
     
-    // Use wildcard pattern to find coverage files regardless of emulator config
-    executionData.setFrom(fileTree(layout.buildDirectory.get()) {
-        include(
-            "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec",
-            "outputs/code_coverage/debugAndroidTest/connected/**/coverage.ec"
-        )
-    })
+    // Collect all coverage files
+    val coverageFiles = mutableListOf<File>()
+    
+    // Unit test coverage
+    val unitTestCoverage = file("${layout.buildDirectory.get()}/outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+    if (unitTestCoverage.exists()) {
+        coverageFiles.add(unitTestCoverage)
+    }
+    
+    // Android test coverage - find all .ec files
+    val androidTestCoverageDir = file("${layout.buildDirectory.get()}/outputs/code_coverage/debugAndroidTest/connected")
+    if (androidTestCoverageDir.exists()) {
+        androidTestCoverageDir.walkTopDown().forEach { file ->
+            if (file.extension == "ec") {
+                coverageFiles.add(file)
+            }
+        }
+    }
+    
+    executionData.setFrom(files(coverageFiles))
 }
 
 // Task to verify version loading

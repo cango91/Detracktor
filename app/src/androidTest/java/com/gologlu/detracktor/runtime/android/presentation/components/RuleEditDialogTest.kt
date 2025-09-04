@@ -275,6 +275,12 @@ class RuleEditDialogTest {
         // Toggle warning settings on
         composeTestRule.onNodeWithTag("warning-settings-switch").performClick()
 
+        // Wait for UI to update
+        composeTestRule.waitForIdle()
+
+        // Scroll to make sure warning options are visible
+        composeTestRule.onNodeWithTag("warn-credentials-row").performScrollTo()
+
         // Verify warning options appear
         composeTestRule.onNodeWithTag("warn-credentials-row").assertIsDisplayed()
         composeTestRule.onNodeWithTag("sensitive-params-input").assertIsDisplayed()

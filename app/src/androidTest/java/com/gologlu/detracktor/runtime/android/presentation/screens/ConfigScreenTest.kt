@@ -30,12 +30,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then
         composeTestRule.onNodeWithTag("config-screen").assertIsDisplayed()
@@ -52,12 +57,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then
         composeTestRule.onNodeWithText("Theme").assertIsDisplayed()
@@ -83,6 +93,9 @@ class ConfigScreenTest {
             }
         }
 
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
+
         // Then
         composeTestRule.onNodeWithTag("theme-option-light").assertIsDisplayed()
         composeTestRule.onNodeWithTag("theme-option-dark").assertIsDisplayed()
@@ -105,12 +118,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { updatedSettings = it },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { updatedSettings = it },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Click on dark theme
         composeTestRule.onNodeWithTag("theme-option-dark").performClick()
@@ -128,12 +146,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then
         composeTestRule.onNodeWithText("After Cleaning URLs").assertIsDisplayed()
@@ -159,6 +182,9 @@ class ConfigScreenTest {
             }
         }
 
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
+
         // Then
         composeTestRule.onNodeWithTag("action-option-always_share").assertIsDisplayed()
         composeTestRule.onNodeWithTag("action-option-always_copy").assertIsDisplayed()
@@ -181,12 +207,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { updatedSettings = it },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { updatedSettings = it },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Click on always share
         composeTestRule.onNodeWithTag("action-option-always_share").performClick()
@@ -204,12 +235,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then
         composeTestRule.onNodeWithText("Share Warnings").assertIsDisplayed()
@@ -234,6 +270,9 @@ class ConfigScreenTest {
             }
         }
 
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
+
         // Then
         composeTestRule.onNodeWithTag("share-warning-show").assertIsDisplayed()
         composeTestRule.onNodeWithTag("share-warning-suppress").assertIsDisplayed()
@@ -255,12 +294,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { updatedSettings = it },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { updatedSettings = it },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Click on suppress warnings
         composeTestRule.onNodeWithTag("share-warning-suppress").performClick()
@@ -278,12 +322,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then
         composeTestRule.onNodeWithText("Rule Management").assertIsDisplayed()
@@ -300,12 +349,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { navigationCalled = true }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { navigationCalled = true }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Click the rule edit button
         composeTestRule.onNodeWithTag("rule-edit-button").performClick()
@@ -321,12 +375,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then
         composeTestRule.onNodeWithText("Always use light theme").assertIsDisplayed()
@@ -341,12 +400,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then
         composeTestRule.onNodeWithText("Automatically share cleaned URLs").assertIsDisplayed()
@@ -361,12 +425,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then
         composeTestRule.onNodeWithText("Display warning dialog when sharing URLs with potential issues").assertIsDisplayed()
@@ -388,6 +457,9 @@ class ConfigScreenTest {
                 )
             }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Verify all theme options are displayed
         composeTestRule.onNodeWithTag("theme-option-light").assertIsDisplayed()
@@ -419,6 +491,9 @@ class ConfigScreenTest {
             }
         }
 
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
+
         // Verify all action options are displayed
         composeTestRule.onNodeWithTag("action-option-always_share").assertIsDisplayed()
         composeTestRule.onNodeWithTag("action-option-always_copy").assertIsDisplayed()
@@ -440,12 +515,17 @@ class ConfigScreenTest {
 
         // When
         composeTestRule.setContent {
-            ConfigScreen(
-                uiSettings = uiSettings,
-                onSettingsChange = { },
-                onNavigateToRuleEdit = { }
-            )
+            MaterialTheme {
+                ConfigScreen(
+                    uiSettings = uiSettings,
+                    onSettingsChange = { },
+                    onNavigateToRuleEdit = { }
+                )
+            }
         }
+
+        // Wait for composition to complete
+        composeTestRule.waitForIdle()
 
         // Then - Verify specific section titles are displayed (avoid multiple node selection)
         composeTestRule.onNodeWithText("Theme").assertIsDisplayed()

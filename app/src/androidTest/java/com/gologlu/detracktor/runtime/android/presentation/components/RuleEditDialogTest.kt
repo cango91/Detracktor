@@ -283,6 +283,9 @@ class RuleEditDialogTest {
 
         // Verify warning options appear
         composeTestRule.onNodeWithTag("warn-credentials-row").assertIsDisplayed()
+        
+        // Scroll to sensitive params input and verify it's displayed
+        composeTestRule.onNodeWithTag("sensitive-params-input").performScrollTo()
         composeTestRule.onNodeWithTag("sensitive-params-input").assertIsDisplayed()
     }
 
@@ -303,6 +306,12 @@ class RuleEditDialogTest {
 
         // Enable warning settings
         composeTestRule.onNodeWithTag("warning-settings-switch").performClick()
+
+        // Wait for UI to update
+        composeTestRule.waitForIdle()
+
+        // Scroll to sensitive params input to ensure it's visible
+        composeTestRule.onNodeWithTag("sensitive-params-input").performScrollTo()
 
         // Enter sensitive parameters
         composeTestRule.onNodeWithTag("sensitive-params-input").performTextInput("token, key, password")

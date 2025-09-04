@@ -1,6 +1,7 @@
 # Detracktor
 ![vibe-coded](https://img.shields.io/badge/vibe--coded-✨-blue)
 [![CI](https://github.com/cango91/Detracktor/actions/workflows/ci.yml/badge.svg)](https://github.com/cango91/Detracktor/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/github/cango91/detracktor/graph/badge.svg?token=00BJ2YAG28)](https://codecov.io/github/cango91/detracktor)
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/cango91/Detracktor?include_prereleases)](https://github.com/cango91/Detracktor/releases)
 
 A privacy-focused Android application that removes tracking parameters from URLs to protect user privacy and clean up shared links.
@@ -40,7 +41,7 @@ Users can add custom rules through the settings interface:
 Comprehensive test suite with unit and integration tests:
 - **Unit Tests** - Core logic testing with Robolectric
 - **Integration Tests** - End-to-end testing on real devices
-- **UI Tests** - Compose UI testing framework (planned)
+- **UI Tests** - Compose UI testing framework
 
 ## Development
 

@@ -1,13 +1,23 @@
 package com.gologlu.detracktor.application.service.net
 
+import com.gologlu.detracktor.domain.error.getOrThrow
 import com.gologlu.detracktor.domain.error.exceptionOrNull
 import com.gologlu.detracktor.domain.error.isSuccess
-import com.gologlu.detracktor.domain.error.getOrThrow
 import com.gologlu.detracktor.domain.model.Url
 import com.gologlu.detracktor.runtime.android.service.net.UrlParserImpl
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import kotlin.test.DefaultAsserter.assertTrue
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [29])
 class UrlParserImplTest {
 
     private val parser = UrlParserImpl()
@@ -16,7 +26,7 @@ class UrlParserImplTest {
     fun `parse_should_handle_basic_HTTP_URL_correctly`() {
         val result = parser.parse("http://example.com/path?query=value")
 
-        assertTrue("Should succeed with valid URL", result.isSuccess)
+        assertTrue("Should succeed with valid URL",  result.isSuccess)
         val parts = result.getOrThrow()
 
         assertEquals("http", parts.scheme)
@@ -134,7 +144,7 @@ class UrlParserImplTest {
         // mimics androidx.core.net.toUri behaviour
         val result = parser.parse("")
         assertNotNull(result)
-        assertTrue(result.isSuccess)
+        assertTrue("Should succeed with empty URL", result.isSuccess)
 
         // However the domain provided vocabulary for creating a valid Url
         // `Url.from` will fail with InvalidUrl error (Scheme and Host are required)
@@ -142,7 +152,7 @@ class UrlParserImplTest {
         with(this.parser){
             val domainResult = Url.from("")
             assertFalse(domainResult.isSuccess)
-            assertTrue(domainResult.exceptionOrNull() is com.gologlu.detracktor.domain.error.DomainException)
+            assertTrue("Domain will reject the parsed empty string", domainResult.exceptionOrNull() is com.gologlu.detracktor.domain.error.DomainException)
         }
     }
 
@@ -198,7 +208,7 @@ class UrlParserImplTest {
         for (address in malformedAddresses) {
             val result = parser.parse(address)
             // android.net.Uri might still parse these, but they should be handled gracefully
-            assertNotNull("Should handle malformed IPv6 address: $address", result)
+            assertNotNull(result, "Should handle malformed IPv6 address: $address")
         }
     }
 
@@ -316,7 +326,7 @@ class UrlParserImplTest {
             assertTrue("Should handle port case: $url", result.isSuccess)
             
             val parts = result.getOrThrow()
-            assertEquals("Port should match for $url", expectedPort, parts.port)
+            assertEquals(parts.port, expectedPort, message = "Port should match for $url")
         }
     }
 
@@ -332,7 +342,7 @@ class UrlParserImplTest {
         for (url in invalidPortUrls) {
             val result = parser.parse(url)
             // android.net.Uri might handle these differently, but should not crash
-            assertNotNull("Should handle invalid port gracefully: $url", result)
+            assertNotNull(result, "Should handle invalid port gracefully: $url")
         }
     }
 
@@ -379,7 +389,7 @@ class UrlParserImplTest {
         assertEquals("/path", parts.path)
         // Should preserve all duplicate parameters
         val paramCount = parts.rawQuery.split("param=").size - 1
-        assertEquals("Should preserve all duplicate parameters", 3, paramCount)
+        assertEquals( 3,paramCount, message="Should preserve all duplicate parameters" )
     }
 
     @Test
@@ -406,7 +416,7 @@ class UrlParserImplTest {
         val parts = result.getOrThrow()
         assertEquals("data", parts.scheme)
         // Data URLs have different structure, host might be null
-        assertNotNull("Should parse data URL structure", parts)
+        assertNotNull( parts, "Should parse data URL structure")
     }
 
     @Test

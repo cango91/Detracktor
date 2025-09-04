@@ -83,14 +83,13 @@ class RuleFormValidator {
             }
             SubdomainMode.SPECIFIC_LIST -> {
                 if (subdomainsInput.isBlank()) {
-                    errors.add("Specific subdomains are required when using specific list mode")
+                    errors.add("Specific subdomains are required")
                 } else {
                     val subdomains = parseCommaSeparatedList(subdomainsInput)
                     subdomains.forEach { subdomain ->
                         if (subdomain.contains('.')) {
                             errors.add("Subdomain should not contain dots: $subdomain")
-                        }
-                        if (!isValidSubdomainName(subdomain)) {
+                        } else if (!isValidSubdomainName(subdomain)) {
                             errors.add("Invalid subdomain name: $subdomain")
                         }
                     }

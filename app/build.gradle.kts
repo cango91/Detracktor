@@ -63,6 +63,22 @@ android {
         animationsDisabled = true
         unitTests {
             isReturnDefaultValues = true
+            isIncludeAndroidResources = true
+        }
+        // Temporarily disable orchestrator to fix test discovery issues
+        // execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+                "META-INF/LICENSE",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/LICENSE.txt",
+                "META-INF/DEPENDENCIES"
+            )
         }
     }
     lint {
@@ -87,23 +103,30 @@ dependencies {
     
     // Enhanced URL cleaning dependencies
     implementation(libs.icu4j)  // IDN and internationalization support
-    implementation(libs.commons.lang3)  // Enhanced regex and pattern matching
+    implementation(libs.commons.lang3)
+    // Enhanced regex and pattern matching
     // Using Android's built-in LruCache instead of Caffeine for Android compatibility
     
     // Core library desugaring for compatibility
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     
     testImplementation(libs.junit)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.inline)  // Enhanced mocking for new functionality
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
+    testImplementation(libs.turbine)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk.android)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.test.ext.junit.ktx)
+    androidTestImplementation(libs.turbine)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.mockk.android)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(libs.kotlin.test)
 }
 
 // Jacoco configuration

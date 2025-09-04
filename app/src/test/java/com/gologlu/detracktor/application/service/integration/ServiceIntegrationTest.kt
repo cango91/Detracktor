@@ -14,14 +14,25 @@ import com.gologlu.detracktor.application.types.Subdomains
 import com.gologlu.detracktor.domain.error.isSuccess
 import com.gologlu.detracktor.domain.error.getOrThrow
 import org.junit.Test
-import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import kotlin.test.DefaultAsserter.assertTrue
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.fail
 
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [29])
 class ServiceIntegrationTest {
 
     private val urlParser = UrlParserImpl()
 
     @Test
-    fun `integration_should_parse_url_and_canonicalize_host_for_rules_matching`() {
+    fun integration_should_parse_url_and_canonicalize_host_for_rules_matching() {
         // Test the flow: URL parsing -> Host canonicalization -> Rules matching
         val testUrl = "https://WWW.YOUTUBE.COM/watch?v=dQw4w9WgXcQ&utm_source=google&gclid=abc123"
         
@@ -41,8 +52,8 @@ class ServiceIntegrationTest {
                 UrlRule(
                     when_ = WhenBlock(
                         host = HostCond(
-                            domains = com.gologlu.detracktor.application.types.Domains.ListOf(listOf("youtube.com","youtu.be")),
-                            subdomains = com.gologlu.detracktor.application.types.Subdomains.OneOf(listOf("www","m",""))
+                            domains = Domains.ListOf(listOf("youtube.com","youtu.be")),
+                            subdomains = Subdomains.OneOf(listOf("www","m",""))
                         ),
                         schemes = null
                     ),
@@ -67,12 +78,12 @@ class ServiceIntegrationTest {
             removePatterns.any { pattern -> Globby.matches(pattern.pattern, param) }
         }
         
-        assertEquals("Should identify utm_source and gclid for removal", 
-                    listOf("utm_source", "gclid"), paramsToRemove)
+        assertEquals(listOf("utm_source", "gclid"), paramsToRemove,
+            message = "Should identify utm_source and gclid for removal")
     }
 
     @Test
-    fun `integration_should_handle_international_domain_with_globby_patterns`() {
+    fun integration_should_handle_international_domain_with_globby_patterns() {
         // Test IDN domain with Unicode parameter patterns
         val testUrl = "https://例え.テスト/search?追跡_source=test&normal_param=value"
         
@@ -89,11 +100,11 @@ class ServiceIntegrationTest {
         // Test Unicode pattern matching
         val unicodePattern = "追跡_*"
         assertTrue("Should match Unicode parameter", Globby.matches(unicodePattern, "追跡_source"))
-        assertFalse("Should not match different parameter", Globby.matches(unicodePattern, "normal_param"))
+        assertFalse( Globby.matches(unicodePattern, "normal_param"), "Should not match different parameter")
     }
 
     @Test
-    fun `integration_should_handle_complex_subdomain_matching`() {
+    fun integration_should_handle_complex_subdomain_matching() {
         // Test complex subdomain scenarios
         val testCases = listOf(
             "https://www.example.com/path" to "www",
@@ -119,18 +130,18 @@ class ServiceIntegrationTest {
                 ""
             }
             
-            assertEquals("Subdomain should match for $url", expectedSubdomain, actualSubdomain)
+            assertEquals( expectedSubdomain, actualSubdomain, "Subdomain should match for $url")
         }
     }
 
     @Test
-    fun `integration_should_validate_and_match_globby_patterns_from_rules`() {
+    fun integration_should_validate_and_match_globby_patterns_from_rules() {
         // Test that patterns from rules are valid and work with Globby
         val rules = AppSettings(
             sites = listOf(
                 UrlRule(
                     when_ = WhenBlock(
-                        host = HostCond(domains = com.gologlu.detracktor.application.types.Domains.Any, subdomains = null),
+                        host = HostCond(domains = Domains.Any, subdomains = null),
                         schemes = null
                     ),
                     then = ThenBlock(remove = listOf(Pattern("utm_*"), Pattern("gclid"), Pattern("fbclid"), Pattern("?"), Pattern("*_id"), Pattern("tracking_*")), warn = null),
@@ -163,11 +174,11 @@ class ServiceIntegrationTest {
             patterns.any { pattern -> Globby.matches(pattern, param) }
         }
         
-        assertEquals("All test params should match some pattern", testParams.size, matchedParams.size)
+        assertEquals( testParams.size, matchedParams.size, "All test params should match some pattern")
     }
 
     @Test
-    fun `integration_should_handle_edge_case_url_with_all_services`() {
+    fun integration_should_handle_edge_case_url_with_all_services() {
         // Complex URL with multiple edge cases
         val complexUrl = "https://測試.例え:8443/path%20with%20spaces?utm_source=test&param%20name=value&gclid=abc123&normal=ok#section"
         
@@ -181,17 +192,17 @@ class ServiceIntegrationTest {
         assertNotNull("Complex host should canonicalize", canonicalHost)
         
         // Test port handling
-        assertEquals("Port should be preserved", 8443, urlParts.port)
+        assertEquals(8443, urlParts.port, "Port should be preserved")
         
         // Test encoded path
-        assertNotNull("Encoded path should be parsed", urlParts.path)
+        assertNotNull(urlParts.path, "Encoded path should be parsed")
         
         // Test query parameters with encoding
-        assertNotNull("Query should be parsed", urlParts.rawQuery)
+        assertNotNull( urlParts.rawQuery, "Query should be parsed")
         assertTrue("Should contain encoded parameters", urlParts.rawQuery.contains("param%20name"))
         
         // Test fragment
-        assertEquals("Fragment should be parsed", "section", urlParts.fragment)
+        assertEquals( "section", urlParts.fragment, "Fragment should be parsed")
         
         // Test pattern matching on decoded parameter names
         val patterns = listOf("utm_*", "gclid", "normal")
@@ -201,20 +212,20 @@ class ServiceIntegrationTest {
             patterns.any { pattern -> Globby.matches(pattern, param) }
         }
         
-        assertEquals("Should match utm_source, gclid, and normal", 
-                    listOf("utm_source", "gclid", "normal"), matchingParams)
+        assertEquals(listOf("utm_source", "gclid", "normal"), matchingParams,
+            message = "Should match utm_source, gclid, and normal")
     }
 
     @Test
-    fun `integration_should_handle_rules_with_scheme_restrictions`() {
+    fun integration_should_handle_rules_with_scheme_restrictions() {
         // Test scheme-specific rules
         val rules = AppSettings(
             sites = listOf(
                 UrlRule(
                     when_ = WhenBlock(
                         host = HostCond(
-                            domains = com.gologlu.detracktor.application.types.Domains.ListOf(listOf("example.com")),
-                            subdomains = com.gologlu.detracktor.application.types.Subdomains.Any
+                            domains = Domains.ListOf(listOf("example.com")),
+                            subdomains = Subdomains.Any
                         ),
                         schemes = listOf("https")
                     ),
@@ -224,8 +235,8 @@ class ServiceIntegrationTest {
                 UrlRule(
                     when_ = WhenBlock(
                         host = HostCond(
-                            domains = com.gologlu.detracktor.application.types.Domains.ListOf(listOf("example.com")),
-                            subdomains = com.gologlu.detracktor.application.types.Subdomains.Any
+                            domains = Domains.ListOf(listOf("example.com")),
+                            subdomains = Subdomains.Any
                         ),
                         schemes = listOf("http")
                     ),
@@ -253,23 +264,23 @@ class ServiceIntegrationTest {
         val httpsRule = rules.sites.find { it.when_.schemes?.contains(httpsScheme) == true }
         val httpRule = rules.sites.find { it.when_.schemes?.contains(httpScheme) == true }
         
-        assertNotNull("Should find HTTPS rule", httpsRule)
-        assertNotNull("Should find HTTP rule", httpRule)
+        assertNotNull(httpsRule, "Should find HTTPS rule")
+        assertNotNull(httpRule, "Should find HTTP rule")
         
         // Test pattern matching for each scheme
         assertTrue("HTTPS rule should match secure_token", 
-                  Globby.matches(httpsRule!!.then.remove[0].pattern, "secure_token"))
-        assertFalse("HTTPS rule should not match insecure_param", 
-                   Globby.matches(httpsRule.then.remove[0].pattern, "insecure_param"))
+                  Globby.matches(httpsRule.then.remove[0].pattern, "secure_token"))
+        assertFalse(Globby.matches(httpsRule.then.remove[0].pattern, "insecure_param"),
+            "HTTPS rule should not match insecure_param",)
         
         assertTrue("HTTP rule should match insecure_param", 
-                  Globby.matches(httpRule!!.then.remove[0].pattern, "insecure_param"))
-        assertFalse("HTTP rule should not match secure_token", 
-                   Globby.matches(httpRule.then.remove[0].pattern, "secure_token"))
+                  Globby.matches(httpRule.then.remove[0].pattern, "insecure_param"))
+        assertFalse(Globby.matches(httpRule.then.remove[0].pattern, "secure_token"),
+            "HTTP rule should not match secure_token", )
     }
 
     @Test
-    fun `integration_should_handle_error_propagation_across_services`() {
+    fun integration_should_handle_error_propagation_across_services() {
         // Test error handling when services fail
         
         // Test invalid Globby pattern
@@ -282,18 +293,18 @@ class ServiceIntegrationTest {
         
         // Test invalid host canonicalization
         val invalidHost = HostCanonicalizer.toAscii("invalid..domain")
-        assertNull("Invalid domain should return null", invalidHost)
+        assertNull(invalidHost, "Invalid domain should return null" )
         
         // JSON parsing test removed (JSON parsing is not in app-layer)
         
         // Test URL parsing with extremely malformed input
         val malformedResult = urlParser.parse("not-a-url-at-all")
         // UrlParserImpl should handle this gracefully (android.net.Uri is lenient)
-        assertNotNull("Should handle malformed URL gracefully", malformedResult)
+        assertNotNull(malformedResult, "Should handle malformed URL gracefully")
     }
 
     @Test
-    fun `integration_should_handle_performance_with_complex_patterns`() {
+    fun integration_should_handle_performance_with_complex_patterns() {
         // Test performance with complex backtracking patterns
         val complexPatterns = listOf(
             "*a*b*c*d*e*f*g*h*i*j*",
@@ -320,7 +331,7 @@ class ServiceIntegrationTest {
             for (testString in testStrings) {
                 val matches = Globby.matches(pattern, testString)
                 // Just ensure it completes - actual matching correctness tested elsewhere
-                assertNotNull("Matching should complete", matches)
+                assertNotNull(matches,"Matching should complete")
             }
         }
         
@@ -332,7 +343,7 @@ class ServiceIntegrationTest {
     }
 
     @Test
-    fun `integration_should_handle_real_world_youtube_example`() {
+    fun integration_should_handle_real_world_youtube_example() {
         // Test with real YouTube URL and rules
         val youtubeUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ&utm_source=google&utm_medium=search&gclid=abc123&fbclid=def456&t=42s"
         
@@ -351,8 +362,8 @@ class ServiceIntegrationTest {
                 UrlRule(
                     when_ = WhenBlock(
                         host = HostCond(
-                            domains = com.gologlu.detracktor.application.types.Domains.ListOf(listOf("youtube.com","youtu.be")),
-                            subdomains = com.gologlu.detracktor.application.types.Subdomains.OneOf(listOf("www","m",""))
+                            domains = Domains.ListOf(listOf("youtube.com","youtu.be")),
+                            subdomains = Subdomains.OneOf(listOf("www","m",""))
                         ),
                         schemes = listOf("http","https")
                     ),
@@ -382,8 +393,9 @@ class ServiceIntegrationTest {
             removePatterns.any { pattern -> Globby.matches(pattern.pattern, param) }
         }
         
-        assertEquals("Should keep v and t parameters", listOf("v", "t"), paramsToKeep)
-        assertEquals("Should remove tracking parameters", 
-                    listOf("utm_source", "utm_medium", "gclid", "fbclid"), paramsToRemove)
+        assertEquals(listOf("v", "t"), paramsToKeep,
+            message = "Should keep v and t parameters")
+        assertEquals(listOf("utm_source", "utm_medium", "gclid", "fbclid"), paramsToRemove,
+            message = "Should remove tracking parameters")
     }
 }

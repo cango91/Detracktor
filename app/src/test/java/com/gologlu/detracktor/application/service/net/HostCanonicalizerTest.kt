@@ -7,24 +7,24 @@ import org.junit.Assert.*
 class HostCanonicalizerTest {
 
     @Test
-    fun `toAscii_should_handle_null_input`() {
+    fun toAscii_should_handle_null_input() {
         assertNull(HostCanonicalizer.toAscii(null))
     }
 
     @Test
-    fun `toAscii_should_handle_empty_input`() {
+    fun toAscii_should_handle_empty_input() {
         assertNull(HostCanonicalizer.toAscii(""))
     }
 
     @Test
-    fun `toAscii_should_handle_basic_ascii_domains`() {
+    fun toAscii_should_handle_basic_ascii_domains() {
         assertEquals("example.com", HostCanonicalizer.toAscii("example.com"))
         assertEquals("google.com", HostCanonicalizer.toAscii("google.com"))
         assertEquals("sub.domain.com", HostCanonicalizer.toAscii("sub.domain.com"))
     }
 
     @Test
-    fun `toAscii_should_convert_to_lowercase`() {
+    fun toAscii_should_convert_to_lowercase() {
         assertEquals("example.com", HostCanonicalizer.toAscii("EXAMPLE.COM"))
         assertEquals("google.com", HostCanonicalizer.toAscii("Google.Com"))
         assertEquals("mixed.case.domain", HostCanonicalizer.toAscii("MiXeD.CaSe.DoMaIn"))

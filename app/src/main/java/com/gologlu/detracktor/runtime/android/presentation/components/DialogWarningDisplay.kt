@@ -40,7 +40,7 @@ fun DialogWarningDisplay(
         ) {
             Icon(
                 imageVector = Icons.Default.Warning,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.content_description_warning),
                 tint = MaterialTheme.colorScheme.error
             )
             Text(

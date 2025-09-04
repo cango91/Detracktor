@@ -41,6 +41,7 @@ class ConfigScreenTest {
 
         // Wait for composition to complete
         composeTestRule.waitForIdle()
+        Thread.sleep(1000) // Add delay for CI stability
 
         // Then
         composeTestRule.onNodeWithTag("config-screen").assertIsDisplayed()

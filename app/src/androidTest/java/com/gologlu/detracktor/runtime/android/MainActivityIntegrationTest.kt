@@ -178,4 +178,210 @@ class MainActivityIntegrationTest {
         // Main screen should be the primary container
         composeTestRule.onNodeWithTag("main-screen").assertIsDisplayed()
     }
+
+    // INSTRUCTIONAL PANEL INTEGRATION TESTS
+    // These tests verify the instructional panel works correctly in the full app context
+
+    @Test
+    fun mainActivity_instructionalPanel_isPresent() {
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // Instructional panel should be present
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("instructional-header").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("instructional-toggle").assertIsDisplayed()
+    }
+
+    @Test
+    fun mainActivity_instructionalPanel_canExpandAndCollapse() {
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // Initially should be collapsed
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        
+        // Click to expand
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Should show expanded content
+        composeTestRule.onNodeWithTag("instructional-content").assertIsDisplayed()
+        
+        // Click to collapse
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Should still be present but content may be hidden
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+    }
+
+    @Test
+    fun mainActivity_instructionalPanel_showsContextualContent() {
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // Should show some instructional content based on current state
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("instructional-header").assertIsDisplayed()
+        
+        // Expand to see the content
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Should show instructional steps
+        composeTestRule.onNodeWithTag("instructional-content").assertIsDisplayed()
+    }
+
+    @Test
+    fun mainActivity_instructionalPanel_survivesConfigurationChanges() {
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // Expand the instructional panel
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Verify it's expanded
+        composeTestRule.onNodeWithTag("instructional-content").assertIsDisplayed()
+        
+        // Simulate configuration change (rotation)
+        composeTestRule.activityRule.scenario.recreate()
+        composeTestRule.waitForIdle()
+        
+        // Instructional panel should still be present and functional
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("instructional-toggle").assertIsDisplayed()
+        
+        // Should be able to interact with it
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun mainActivity_instructionalPanel_doesNotCrashOnInteraction() {
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // Rapid clicking should not crash the app
+        repeat(5) {
+            composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+            composeTestRule.waitForIdle()
+        }
+        
+        // App should still be functional
+        composeTestRule.onNodeWithTag("main-screen").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("clean-action").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+    }
+
+    @Test
+    fun mainActivity_instructionalPanel_maintainsStateConsistency() {
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // Expand the panel
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Interact with other UI elements (this might trigger clipboard checks)
+        composeTestRule.onNodeWithTag("clean-action").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Instructional panel should still be present and functional
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("instructional-toggle").assertIsDisplayed()
+        
+        // Should still be able to toggle
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Should not crash
+        composeTestRule.onNodeWithTag("main-screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun mainActivity_instructionalPanel_worksWithOtherUIElements() {
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // All main UI elements should be present
+        composeTestRule.onNodeWithTag("main-screen").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("title").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("status").assertExists()
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("clean-action").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("open-settings").assertIsDisplayed()
+        
+        // Expand instructional panel
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Other elements should still be functional
+        composeTestRule.onNodeWithTag("clean-action").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("open-settings").assertIsDisplayed()
+        
+        // Should be able to interact with other elements
+        composeTestRule.onNodeWithTag("clean-action").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Everything should still work
+        composeTestRule.onNodeWithTag("main-screen").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+    }
+
+    @Test
+    fun mainActivity_instructionalPanel_handlesScrolling() {
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // Expand the instructional panel
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // Should be able to scroll if content is long
+        composeTestRule.onNodeWithTag("instructional-content").assertIsDisplayed()
+        
+        // Try scrolling within the instructional content
+        composeTestRule.onNodeWithTag("instructional-content").performScrollTo()
+        
+        // Should not crash and content should still be visible
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("main-screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun mainActivity_fullWorkflow_withInstructionalPanel() {
+        // Test a complete user workflow including instructional panel interaction
+        
+        // Wait for initial load
+        composeTestRule.waitForIdle()
+        
+        // 1. User sees the main screen with instructional panel
+        composeTestRule.onNodeWithTag("main-screen").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        
+        // 2. User expands instructional panel to read instructions
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("instructional-content").assertIsDisplayed()
+        
+        // 3. User tries to clean URL (might show different instructions based on clipboard)
+        composeTestRule.onNodeWithTag("clean-action").performClick()
+        composeTestRule.waitForIdle()
+        
+        // 4. Instructional panel should still be functional
+        composeTestRule.onNodeWithTag("instructional-panel").assertIsDisplayed()
+        
+        // 5. User can still interact with instructional panel
+        composeTestRule.onNodeWithTag("instructional-toggle").performClick()
+        composeTestRule.waitForIdle()
+        
+        // 6. User can access settings
+        composeTestRule.onNodeWithTag("open-settings").performClick()
+        composeTestRule.waitForIdle()
+        
+        // The workflow should complete without crashes
+        // Note: Settings activity may open, but we're testing that interactions don't crash
+    }
 }

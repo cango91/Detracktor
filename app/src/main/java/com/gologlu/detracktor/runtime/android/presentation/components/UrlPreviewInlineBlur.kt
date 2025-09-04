@@ -272,20 +272,12 @@ private fun renderInlineUrlComponents(
                 else -> colors.urlQuery
             }
             
-            // Parameter key
-            val keyText = if (shouldMask) {
-                BlurStateCalculator.generateMask(tok.decodedKey)
-            } else {
-                tok.decodedKey
-            }
-            
+            // Parameter key - NEVER mask parameter names, only values
             Text(
-                text = keyText,
+                text = tok.decodedKey,
                 color = keyColor,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier
-                    .testTag("param-key-$idx")
-                    .then(if (shouldMask) Modifier.blur(4.dp) else Modifier)
+                modifier = Modifier.testTag("param-key-$idx")
             )
             
             if (tok.hasEquals) {

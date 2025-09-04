@@ -73,8 +73,12 @@ import com.gologlu.detracktor.runtime.android.presentation.types.DialogType
 import com.gologlu.detracktor.runtime.android.service.UiSettingsService
 import com.gologlu.detracktor.runtime.android.presentation.components.CleaningDialog
 import com.gologlu.detracktor.runtime.android.presentation.components.ShareWarningDialog
+import com.gologlu.detracktor.runtime.android.presentation.components.InstructionalPanel
 import com.gologlu.detracktor.runtime.android.presentation.utils.BlurStateCalculator
 import com.gologlu.detracktor.runtime.android.presentation.utils.BlurState
+import com.gologlu.detracktor.runtime.android.presentation.types.ClipboardState
+import com.gologlu.detracktor.runtime.android.presentation.types.InstructionalContent
+import com.gologlu.detracktor.runtime.android.presentation.types.AppStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -209,7 +213,8 @@ fun MainScreen(
     var resumeTick by remember { mutableStateOf(0) }
     var shareHandled by remember { mutableStateOf(false) }
     var dialogState by remember { mutableStateOf(DialogState()) }
-    var clipboardNonText by remember { mutableStateOf(false) }
+    var clipboardState by remember { mutableStateOf(ClipboardState.EMPTY) }
+    var instructionalContent by remember { mutableStateOf(getInstructionalContent(ClipboardState.EMPTY)) }
     
     // Make uiSettings mutable within this composable for immediate updates
     var currentUiSettings by remember { mutableStateOf(uiSettings) }
@@ -234,21 +239,27 @@ fun MainScreen(
         if (resumeTick > 0) {
             delay(250)
             original = readClipboard(context)
-            clipboardNonText = original.isNullOrBlank() && clipboardHasNonText(context)
+            clipboardState = determineClipboardState(context, urlParser)
+            // Preserve expansion state when updating instructional content
+            instructionalContent = getInstructionalContent(clipboardState).copy(
+                isExpanded = instructionalContent.isExpanded
+            )
         }
     }
 
     LaunchedEffect(Unit) {
         if (original.isNullOrBlank()) {
             original = readClipboard(context)
-            if (original.isNullOrBlank()) {
-                clipboardNonText = clipboardHasNonText(context)
-            }
+            clipboardState = determineClipboardState(context, urlParser)
+            // Preserve expansion state when updating instructional content
+            instructionalContent = getInstructionalContent(clipboardState).copy(
+                isExpanded = instructionalContent.isExpanded
+            )
         }
     }
 
     // Re-parse and re-evaluate when URL or rules version changes
-    LaunchedEffect(original, rulesVersion) {
+    LaunchedEffect(original, rulesVersion, clipboardState) {
         val raw = original
         if (raw.isNullOrBlank()) {
             currentParts = null
@@ -256,13 +267,10 @@ fun MainScreen(
             currentEvaluation = null
             warningData = buildWarningData(null, null).copy(isExpanded = warningPanelExpanded)
             ruleMatchData = RuleMatchDisplayData(emptyList())
-            if (clipboardNonText) {
-                errorMessage = "Not a URL"
-                status = "Invalid URL"
-            } else {
-                errorMessage = null
-                status = "Ready"
-            }
+            
+            // Use new status message logic - no error message duplication
+            status = getStatusMessage(clipboardState, null)
+            errorMessage = null // Don't duplicate the status message
             return@LaunchedEffect
         }
         when (val parsed: DomainResult<UrlParts> = urlParser.parse(raw as MaybeUrl)) {
@@ -403,22 +411,46 @@ fun MainScreen(
             }
         }
         
-        // Clean URL button - prominent in center
-        Button(onClick = {
-            currentParts?.let { p ->
-                val cleanedUrl = with(hostCanonicalizer) { ruleEngine.applyRemovals(p) }.toUrlString()
-                handleManualCleaning(cleanedUrl, currentUiSettings, uiSettingsService, context) { newDialogState ->
-                    dialogState = newDialogState
+        // Clean URL button - enabled based on clipboard state
+        Button(
+            onClick = {
+                if (clipboardState == ClipboardState.VALID_URL) {
+                    currentParts?.let { p ->
+                        val cleanedUrl = with(hostCanonicalizer) { ruleEngine.applyRemovals(p) }.toUrlString()
+                        handleManualCleaning(cleanedUrl, currentUiSettings, uiSettingsService, context) { newDialogState ->
+                            dialogState = newDialogState
+                        }
+                    }
+                } else {
+                    // Provide feedback for non-valid clipboard states
+                    val message = when (clipboardState) {
+                        ClipboardState.EMPTY -> "Clipboard is empty - copy a URL first"
+                        ClipboardState.NON_TEXT -> "Clipboard contains non-text content"
+                        ClipboardState.TEXT_NOT_URL -> "Clipboard text is not a valid URL"
+                        ClipboardState.VALID_URL -> "" // Should not reach here
+                    }
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
-            }
-        }, modifier = Modifier.testTag("clean-action")) {
+            },
+            enabled = shouldEnableCleanButton(clipboardState),
+            modifier = Modifier.testTag("clean-action")
+        ) {
             Text("Clean URL")
         }
+        
+        // Instructional Panel - positioned between main content and settings
+        InstructionalPanel(
+            content = instructionalContent,
+            onToggleExpanded = { 
+                instructionalContent = instructionalContent.copy(isExpanded = !instructionalContent.isExpanded)
+            },
+            modifier = Modifier.testTag("instructional-panel")
+        )
         
         // Spacer to push settings link to bottom
         androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
         
-        // Settings hyperlink at bottom
+        // Settings as bottom navigation/footer
         androidx.compose.material3.TextButton(
             onClick = {
                 context.startActivity(Intent(context, ConfigActivity::class.java))
@@ -507,6 +539,123 @@ private fun clipboardHasNonText(context: Context): Boolean {
     if (hasTextMime) return false
     val text = clip.getItemAt(0).coerceToText(context)?.toString()
     return text.isNullOrBlank()
+}
+
+/**
+ * Determine the current clipboard state for UX feedback
+ */
+private fun determineClipboardState(context: Context, urlParser: UrlParser): ClipboardState {
+    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip: ClipData? = cm.primaryClip
+    
+    // No clipboard content at all
+    if (clip == null || clip.itemCount == 0) {
+        return ClipboardState.EMPTY
+    }
+    
+    // Try to get text content
+    val item = clip.getItemAt(0)
+    val text = item?.coerceToText(context)?.toString()
+    
+    // Check if clipboard is truly empty (no text content)
+    if (text.isNullOrEmpty()) {
+        // Check if there's any content at all in the clipboard
+        val hasAnyContent = item?.text != null || item?.htmlText != null || item?.uri != null
+        return if (hasAnyContent) ClipboardState.NON_TEXT else ClipboardState.EMPTY
+    }
+    
+    // Text is blank/whitespace only
+    if (text.isBlank()) {
+        return ClipboardState.EMPTY
+    }
+    
+    // Check if text is a valid URL
+    return when (val parsed = urlParser.parse(text as MaybeUrl)) {
+        is DomainResult.Success -> {
+            // Further validate that it's a proper URL with scheme and host
+            when (val validated = with(urlParser) { Url.from(text as MaybeUrl) }) {
+                is DomainResult.Success -> ClipboardState.VALID_URL
+                is DomainResult.Failure -> ClipboardState.TEXT_NOT_URL
+            }
+        }
+        is DomainResult.Failure -> ClipboardState.TEXT_NOT_URL
+    }
+}
+
+/**
+ * Generate appropriate status message based on clipboard state and evaluation
+ */
+private fun getStatusMessage(clipboardState: ClipboardState, evaluation: Evaluation?): String {
+    return when (clipboardState) {
+        ClipboardState.EMPTY -> "Clipboard empty"
+        ClipboardState.NON_TEXT -> "Clipboard contains non-text content"
+        ClipboardState.TEXT_NOT_URL -> "Clipboard text is not a valid URL"
+        ClipboardState.VALID_URL -> {
+            if (evaluation == null) {
+                "Processing URL..."
+            } else if (evaluation.matches.isEmpty()) {
+                "No rules matched"
+            } else {
+                "${evaluation.matches.size} rule(s) matched"
+            }
+        }
+    }
+}
+
+/**
+ * Determine if Clean URL button should be enabled based on clipboard state
+ */
+private fun shouldEnableCleanButton(clipboardState: ClipboardState): Boolean {
+    return clipboardState == ClipboardState.VALID_URL
+}
+
+/**
+ * Generate context-appropriate instructional content
+ */
+private fun getInstructionalContent(clipboardState: ClipboardState): InstructionalContent {
+    return when (clipboardState) {
+        ClipboardState.EMPTY -> InstructionalContent(
+            title = "How to Use Detracktor",
+            steps = listOf(
+                "Copy a URL to your clipboard from any app",
+                "Return to Detracktor - it will automatically detect the URL",
+                "Review which tracking parameters will be removed",
+                "Tap 'Clean URL' to remove tracking parameters",
+                "Share or copy the cleaned URL",
+                "You can directly share to Detracktor from any app to get a cleaned URL automatically",
+                "Customize site-specific rules in the settings"
+            )
+        )
+        ClipboardState.NON_TEXT -> InstructionalContent(
+            title = "Clipboard Content Not Supported",
+            steps = listOf(
+                "Detracktor works with text URLs only",
+                "Copy a URL as text from your browser or another app",
+                "Return to Detracktor to clean the URL"
+            )
+        )
+        ClipboardState.TEXT_NOT_URL -> InstructionalContent(
+            title = "Invalid URL Format",
+            steps = listOf(
+                "The text in your clipboard is not a valid URL",
+                "Make sure to copy the complete URL including 'https://'",
+                "URLs should start with http:// or https://",
+                "Try copying the URL again from the address bar"
+            )
+        )
+        ClipboardState.VALID_URL -> InstructionalContent(
+            title = "URL Ready for Cleaning",
+            steps = listOf(
+                "Review the URL preview above",
+                "If there is any potential sensitive data, warnings will be shown below the URL",
+                "If any trackers are recognized, they will be shown below the URL",
+                "All unknown parameters will be blurred by default",
+                "Tap 'Show Values' to toggle blurring of values",
+                "Tap 'Clean URL' to remove tracking parameters",
+                "Choose to share or copy the cleaned URL"
+            )
+        )
+    }
 }
 
 private fun buildAnnotatedUrl(

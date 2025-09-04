@@ -236,7 +236,7 @@ def test_strategy(strategy_func, strategy_name: str, compatibility_offset: int =
         print(f"{version:20} -> {code:10} {'✓' if ends_in_zero and 'alpha' not in version and 'beta' not in version and 'rc' not in version and 'unknown' not in version else ''}")
     
     # Check ordering constraints for v1.0.0 series
-    codes = {v.split('-')[0] + ('-' + v.split('-')[1] if '-' in v else ''): c for v, c in results[:8]}
+    codes = {v.split('-')[0] + ('-' + v.split('-')[1] if '-' in v else ''): c for v, c in results}
     
     A = codes["v1.0.0-alpha.1"]
     B = codes["v1.0.0-alpha.2"] 
@@ -246,12 +246,15 @@ def test_strategy(strategy_func, strategy_name: str, compatibility_offset: int =
     F = codes["v1.0.0-rc.2"]
     G = codes["v1.0.0-unknown.99"]
     H = codes["v1.0.0"]
+    J = codes["v1.1.0-alpha.1"]
+    K = codes["v1.1.0-alpha.2"]
+    L = codes["v1.1.0"]
     
-    # Check required ordering: H > F > E > D > C > B > A > G
-    ordering_correct = H > F > E > D > C > B > A > G
-    stable_ends_in_zero = str(H).endswith('0')
+    # Check required ordering: L > K > J > H > F > E > D > C > B > A > G
+    ordering_correct = L > K > J > H > F > E > D > C > B > A > G
+    stable_ends_in_zero = str(H).endswith('0') and str(L).endswith('0')
     
-    print(f"\nOrdering check (H > F > E > D > C > B > A > G): {'✓' if ordering_correct else '✗'}")
+    print(f"\nOrdering check (L > K > J > H > F > E > D > C > B > A > G): {'✓' if ordering_correct else '✗'}")
     print(f"Stable ends in 0: {'✓' if stable_ends_in_zero else '✗'}")
     
     # Check compatibility with existing version

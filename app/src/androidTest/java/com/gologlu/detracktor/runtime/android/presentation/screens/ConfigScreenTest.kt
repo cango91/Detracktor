@@ -253,6 +253,9 @@ class ConfigScreenTest {
         composeTestRule.waitForIdle()
 
         // Then
+        // Ensure Share Warnings section is in view for smaller screens/SDK29
+        composeTestRule.onNodeWithTag("config-screen")
+            .performScrollToNode(hasTestTag("settings-section-share-warnings"))
         composeTestRule.onNodeWithText("Share Warnings").assertIsDisplayed()
         composeTestRule.onNodeWithText("Control warnings when sharing URLs with potential issues").assertIsDisplayed()
         composeTestRule.onNodeWithText("Show Warnings").assertIsDisplayed()
@@ -279,6 +282,8 @@ class ConfigScreenTest {
         composeTestRule.waitForIdle()
 
         // Then
+        composeTestRule.onNodeWithTag("config-screen")
+            .performScrollToNode(hasTestTag("settings-section-share-warnings"))
         composeTestRule.onNodeWithTag("share-warning-show").assertIsDisplayed()
         composeTestRule.onNodeWithTag("share-warning-suppress").assertIsDisplayed()
         
@@ -312,6 +317,8 @@ class ConfigScreenTest {
         composeTestRule.waitForIdle()
 
         // Click on suppress warnings
+        composeTestRule.onNodeWithTag("config-screen")
+            .performScrollToNode(hasTestTag("settings-section-share-warnings"))
         composeTestRule.onNodeWithTag("share-warning-suppress").performClick()
 
         // Then
@@ -449,6 +456,8 @@ class ConfigScreenTest {
         composeTestRule.waitForIdle()
 
         // Then
+        composeTestRule.onNodeWithTag("config-screen")
+            .performScrollToNode(hasTestTag("settings-section-share-warnings"))
         composeTestRule.onNodeWithText("Display warning dialog when sharing URLs with potential issues").assertIsDisplayed()
         composeTestRule.onNodeWithText("Automatically share URLs without showing warning dialogs").assertIsDisplayed()
     }

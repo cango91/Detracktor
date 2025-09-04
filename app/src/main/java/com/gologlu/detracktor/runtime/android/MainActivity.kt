@@ -199,7 +199,7 @@ fun MainScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     var original by remember { mutableStateOf<String?>(initialShared) }
     var cleaned by remember { mutableStateOf<String?>(null) }
-    var status by remember { mutableStateOf<String>("Ready") }
+    var status by remember { mutableStateOf<String>(context.getString(R.string.status_ready)) }
     var blurEnabled by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val colorScheme = MaterialTheme.colorScheme
@@ -214,7 +214,7 @@ fun MainScreen(
     var shareHandled by remember { mutableStateOf(false) }
     var dialogState by remember { mutableStateOf(DialogState()) }
     var clipboardState by remember { mutableStateOf(ClipboardState.EMPTY) }
-    var instructionalContent by remember { mutableStateOf(getInstructionalContent(ClipboardState.EMPTY)) }
+    var instructionalContent by remember { mutableStateOf(getInstructionalContent(context, ClipboardState.EMPTY)) }
     
     // Make uiSettings mutable within this composable for immediate updates
     var currentUiSettings by remember { mutableStateOf(uiSettings) }
@@ -241,7 +241,7 @@ fun MainScreen(
             original = readClipboard(context)
             clipboardState = determineClipboardState(context, urlParser)
             // Preserve expansion state when updating instructional content
-            instructionalContent = getInstructionalContent(clipboardState).copy(
+            instructionalContent = getInstructionalContent(context, clipboardState).copy(
                 isExpanded = instructionalContent.isExpanded
             )
         }
@@ -252,7 +252,7 @@ fun MainScreen(
             original = readClipboard(context)
             clipboardState = determineClipboardState(context, urlParser)
             // Preserve expansion state when updating instructional content
-            instructionalContent = getInstructionalContent(clipboardState).copy(
+            instructionalContent = getInstructionalContent(context, clipboardState).copy(
                 isExpanded = instructionalContent.isExpanded
             )
         }
@@ -269,7 +269,7 @@ fun MainScreen(
             ruleMatchData = RuleMatchDisplayData(emptyList())
             
             // Use new status message logic - no error message duplication
-            status = getStatusMessage(clipboardState, null)
+            status = getStatusMessage(context, clipboardState, null)
             errorMessage = null // Don't duplicate the status message
             return@LaunchedEffect
         }
@@ -287,8 +287,8 @@ fun MainScreen(
                     currentEvaluation = null
                     warningData = buildWarningData(null, null).copy(isExpanded = warningPanelExpanded)
                     ruleMatchData = RuleMatchDisplayData(emptyList())
-                    errorMessage = "Not a URL"
-                    status = "Invalid URL"
+                    errorMessage = context.getString(R.string.status_not_a_url)
+                    status = context.getString(R.string.status_invalid_url)
                     return@LaunchedEffect
                 }
                 val eval = with(hostCanonicalizer) { ruleEngine.evaluate(parts) }
@@ -302,7 +302,7 @@ fun MainScreen(
                 blurState = BlurStateCalculator.calculateBlurState(parts, currentEffects)
                 
                 errorMessage = null
-                status = if (eval.matches.isEmpty()) "No rules matched" else "${eval.matches.size} rule(s) matched"
+                status = if (eval.matches.isEmpty()) context.getString(R.string.status_no_rules_matched) else context.getString(R.string.status_rules_matched, eval.matches.size)
 
                 // Share intent pass-thru: handle based on warnings and settings
                 if (initialShared != null && !shareHandled) {
@@ -315,8 +315,8 @@ fun MainScreen(
                             this.type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, cleanedUrl)
                         }
-                        context.startActivity(Intent.createChooser(sendIntent, "Share cleaned URL"))
-                        Toast.makeText(context, "Cleaned and ready to share", Toast.LENGTH_SHORT).show()
+                        context.startActivity(Intent.createChooser(sendIntent, context.getString(R.string.share_chooser_title)))
+                        Toast.makeText(context, context.getString(R.string.toast_cleaned_and_shared), Toast.LENGTH_SHORT).show()
                         shareHandled = true
                         if (context is ComponentActivity) context.finish()
                     } else {
@@ -337,8 +337,8 @@ fun MainScreen(
                 currentEvaluation = null
                 warningData = buildWarningData(null, null).copy(isExpanded = warningPanelExpanded)
                 ruleMatchData = RuleMatchDisplayData(emptyList())
-                errorMessage = "Not a URL"
-                status = "Invalid URL"
+                errorMessage = context.getString(R.string.status_not_a_url)
+                status = context.getString(R.string.status_invalid_url)
             }
         }
     }
@@ -353,7 +353,7 @@ fun MainScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ){
         Text(
-            text = "Detracktor",
+            text = context.getString(R.string.app_name),
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.testTag("title")
@@ -388,7 +388,7 @@ fun MainScreen(
                                 ),
                                 contentDescription = null
                             )
-                            Text(if (blurEnabled) "Show Values" else "Hide Values")
+                            Text(if (blurEnabled) context.getString(R.string.button_reveal_values) else context.getString(R.string.button_hide_values))
                         }
                     }
                 }
@@ -424,9 +424,9 @@ fun MainScreen(
                 } else {
                     // Provide feedback for non-valid clipboard states
                     val message = when (clipboardState) {
-                        ClipboardState.EMPTY -> "Clipboard is empty - copy a URL first"
-                        ClipboardState.NON_TEXT -> "Clipboard contains non-text content"
-                        ClipboardState.TEXT_NOT_URL -> "Clipboard text is not a valid URL"
+                        ClipboardState.EMPTY -> context.getString(R.string.error_clipboard_empty_copy_url)
+                        ClipboardState.NON_TEXT -> context.getString(R.string.error_clipboard_non_text_content)
+                        ClipboardState.TEXT_NOT_URL -> context.getString(R.string.error_clipboard_text_not_url)
                         ClipboardState.VALID_URL -> "" // Should not reach here
                     }
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -435,7 +435,7 @@ fun MainScreen(
             enabled = shouldEnableCleanButton(clipboardState),
             modifier = Modifier.testTag("clean-action")
         ) {
-            Text("Clean URL")
+            Text(context.getString(R.string.button_clean_url))
         }
         
         // Instructional Panel - positioned between main content and settings
@@ -458,7 +458,7 @@ fun MainScreen(
             modifier = Modifier.testTag("open-settings")
         ) {
             Text(
-                text = "Open Settings",
+                text = context.getString(R.string.button_open_settings),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -585,18 +585,18 @@ private fun determineClipboardState(context: Context, urlParser: UrlParser): Cli
 /**
  * Generate appropriate status message based on clipboard state and evaluation
  */
-private fun getStatusMessage(clipboardState: ClipboardState, evaluation: Evaluation?): String {
+private fun getStatusMessage(context: Context, clipboardState: ClipboardState, evaluation: Evaluation?): String {
     return when (clipboardState) {
-        ClipboardState.EMPTY -> "Clipboard empty"
-        ClipboardState.NON_TEXT -> "Clipboard contains non-text content"
-        ClipboardState.TEXT_NOT_URL -> "Clipboard text is not a valid URL"
+        ClipboardState.EMPTY -> context.getString(R.string.status_clipboard_empty)
+        ClipboardState.NON_TEXT -> context.getString(R.string.status_clipboard_non_text)
+        ClipboardState.TEXT_NOT_URL -> context.getString(R.string.status_clipboard_text_not_url)
         ClipboardState.VALID_URL -> {
             if (evaluation == null) {
-                "Processing URL..."
+                context.getString(R.string.status_processing_url)
             } else if (evaluation.matches.isEmpty()) {
-                "No rules matched"
+                context.getString(R.string.status_no_rules_matched)
             } else {
-                "${evaluation.matches.size} rule(s) matched"
+                context.getString(R.string.status_rules_matched, evaluation.matches.size)
             }
         }
     }
@@ -612,47 +612,47 @@ private fun shouldEnableCleanButton(clipboardState: ClipboardState): Boolean {
 /**
  * Generate context-appropriate instructional content
  */
-private fun getInstructionalContent(clipboardState: ClipboardState): InstructionalContent {
+private fun getInstructionalContent(context: Context, clipboardState: ClipboardState): InstructionalContent {
     return when (clipboardState) {
         ClipboardState.EMPTY -> InstructionalContent(
-            title = "How to Use Detracktor",
+            title = context.getString(R.string.instructional_title_how_to_use),
             steps = listOf(
-                "Copy a URL to your clipboard from any app",
-                "Return to Detracktor - it will automatically detect the URL",
-                "Review which tracking parameters will be removed",
-                "Tap 'Clean URL' to remove tracking parameters",
-                "Share or copy the cleaned URL",
-                "You can directly share to Detracktor from any app to get a cleaned URL automatically",
-                "Customize site-specific rules in the settings"
+                context.getString(R.string.instructional_step_copy_url),
+                context.getString(R.string.instructional_step_return_detracktor),
+                context.getString(R.string.instructional_step_review_parameters),
+                context.getString(R.string.instructional_step_tap_clean_url),
+                context.getString(R.string.instructional_step_share_or_copy),
+                context.getString(R.string.instructional_step_direct_share),
+                context.getString(R.string.instructional_step_customize_rules)
             )
         )
         ClipboardState.NON_TEXT -> InstructionalContent(
-            title = "Clipboard Content Not Supported",
+            title = context.getString(R.string.instructional_title_clipboard_not_supported),
             steps = listOf(
-                "Detracktor works with text URLs only",
-                "Copy a URL as text from your browser or another app",
-                "Return to Detracktor to clean the URL"
+                context.getString(R.string.instructional_step_text_urls_only),
+                context.getString(R.string.instructional_step_copy_url_text),
+                context.getString(R.string.instructional_step_return_to_clean)
             )
         )
         ClipboardState.TEXT_NOT_URL -> InstructionalContent(
-            title = "Invalid URL Format",
+            title = context.getString(R.string.instructional_title_invalid_url_format),
             steps = listOf(
-                "The text in your clipboard is not a valid URL",
-                "Make sure to copy the complete URL including 'https://'",
-                "URLs should start with http:// or https://",
-                "Try copying the URL again from the address bar"
+                context.getString(R.string.instructional_step_text_not_valid_url),
+                context.getString(R.string.instructional_step_include_https),
+                context.getString(R.string.instructional_step_urls_start_http),
+                context.getString(R.string.instructional_step_try_copying_again)
             )
         )
         ClipboardState.VALID_URL -> InstructionalContent(
-            title = "URL Ready for Cleaning",
+            title = context.getString(R.string.instructional_title_url_ready),
             steps = listOf(
-                "Review the URL preview above",
-                "If there is any potential sensitive data, warnings will be shown below the URL",
-                "If any trackers are recognized, they will be shown below the URL",
-                "All unknown parameters will be blurred by default",
-                "Tap 'Show Values' to toggle blurring of values",
-                "Tap 'Clean URL' to remove tracking parameters",
-                "Choose to share or copy the cleaned URL"
+                context.getString(R.string.instructional_step_review_url_preview),
+                context.getString(R.string.instructional_step_sensitive_data_warnings),
+                context.getString(R.string.instructional_step_trackers_shown),
+                context.getString(R.string.instructional_step_unknown_params_blurred),
+                context.getString(R.string.instructional_step_tap_show_values),
+                context.getString(R.string.instructional_step_tap_clean_url),
+                context.getString(R.string.instructional_step_choose_share_copy)
             )
         )
     }
@@ -742,19 +742,20 @@ private fun buildAnnotatedUrl(
 }
 
 private fun summarizeWarnings(
+    context: Context,
     parts: UrlParts,
     eval: Evaluation
 ): String? {
     val warnings = mutableListOf<String>()
     if ((eval.effectiveWarnings.warnOnEmbeddedCredentials == true) && !parts.userInfo.isNullOrEmpty()) {
-        warnings.add("Embedded credentials detected")
+        warnings.add(context.getString(R.string.warning_embedded_detected))
     }
     eval.effectiveWarnings.sensitiveParams?.let { sens ->
         val present = parts.queryPairs.getTokens().map { it.decodedKey }.toSet().intersect(sens.toSet())
-        if (present.isNotEmpty()) warnings.add("Sensitive params: ${present.joinToString(", ")}")
+        if (present.isNotEmpty()) warnings.add(context.getString(R.string.warning_sensitive_params_found, present.joinToString(", ")))
     }
     if (eval.matches.isNotEmpty()) {
-        warnings.add("Matched rules: ${eval.matches.size}")
+        warnings.add(context.getString(R.string.warning_matched_rules, eval.matches.size))
     }
     return if (warnings.isEmpty()) null else warnings.joinToString(" • ")
 }

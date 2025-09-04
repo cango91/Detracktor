@@ -123,7 +123,7 @@
     <string name="button_delete">Sil</string>
     
     <!-- Rule Details -->
-    <string name="rule_detail_host">Host:</string>
+    <string name="rule_detail_host">Sunucu:</string>
     <string name="rule_detail_removes">Kaldırır:</string>
     <string name="rule_detail_schemes">Şemalar:</string>
     <string name="rule_detail_warns_on">Uyarır:</string>
@@ -151,4 +151,104 @@
     <string name="rule_match_unknown_domain">bilinmeyen</string>
     <string name="rule_match_matched_label">Eşleşen:</string>
     <string name="rule_match_total_matched">(%d eşleşti)</string>
+    
+    <!-- New Status Messages -->
+    <string name="status_processing_url">URL işleniyor...</string>
+    <string name="status_clipboard_empty">Pano boş</string>
+    <string name="status_clipboard_non_text">Pano metin olmayan içerik içeriyor</string>
+    <string name="status_clipboard_text_not_url">Pano metni geçerli bir URL değil</string>
+    <string name="status_not_a_url">URL değil</string>
+    
+    <!-- Error Messages -->
+    <string name="error_clipboard_empty_copy_url">Pano boş - önce bir URL kopyalayın</string>
+    <string name="error_clipboard_non_text_content">Pano metin olmayan içerik içeriyor</string>
+    <string name="error_clipboard_text_not_url">Pano metni geçerli bir URL değil</string>
+    <string name="error_invalid_url_parsing">Geçersiz URL: %s</string>
+    
+    <!-- Instructional Content -->
+    <string name="instructional_title_how_to_use">Detracktor Nasıl Kullanılır</string>
+    <string name="instructional_title_clipboard_not_supported">Pano İçeriği Desteklenmiyor</string>
+    <string name="instructional_title_invalid_url_format">Geçersiz URL Formatı</string>
+    <string name="instructional_title_url_ready">URL Temizleme İçin Hazır</string>
+    
+    <!-- Instructional Steps -->
+    <string name="instructional_step_copy_url">Herhangi bir uygulamadan panoya bir URL kopyalayın</string>
+    <string name="instructional_step_return_detracktor">Detracktor\'a dönün - URL\'yi otomatik olarak algılayacak</string>
+    <string name="instructional_step_review_parameters">Hangi izleme parametrelerinin kaldırılacağını gözden geçirin</string>
+    <string name="instructional_step_tap_clean_url">İzleme parametrelerini kaldırmak için \'URL\'yi Temizle\'ye dokunun</string>
+    <string name="instructional_step_share_or_copy">Temizlenmiş URL\'yi paylaşın veya kopyalayın</string>
+    <string name="instructional_step_direct_share">Temizlenmiş URL\'yi otomatik olarak almak için herhangi bir uygulamadan doğrudan Detracktor\'a paylaşabilirsiniz</string>
+    <string name="instructional_step_customize_rules">Ayarlarda siteye özel kuralları özelleştirin</string>
+    
+    <string name="instructional_step_text_urls_only">Detracktor sadece metin URL\'leri ile çalışır</string>
+    <string name="instructional_step_copy_url_text">Tarayıcınızdan veya başka bir uygulamadan URL\'yi metin olarak kopyalayın</string>
+    <string name="instructional_step_return_to_clean">URL\'yi temizlemek için Detracktor\'a dönün</string>
+    
+    <string name="instructional_step_text_not_valid_url">Panonuzdaki metin geçerli bir URL değil</string>
+    <string name="instructional_step_include_https">Tam URL\'yi \'https://\' dahil olmak üzere kopyaladığınızdan emin olun</string>
+    <string name="instructional_step_urls_start_http">URL\'ler http:// veya https:// ile başlamalıdır</string>
+    <string name="instructional_step_try_copying_again">URL\'yi adres çubuğundan tekrar kopyalamayı deneyin</string>
+    
+    <string name="instructional_step_review_url_preview">Yukarıdaki URL önizlemesini gözden geçirin</string>
+    <string name="instructional_step_sensitive_data_warnings">Herhangi bir potansiyel hassas veri varsa, URL\'nin altında uyarılar gösterilecektir</string>
+    <string name="instructional_step_trackers_shown">Herhangi bir izleyici tanınırsa, URL\'nin altında gösterilecektir</string>
+    <string name="instructional_step_unknown_params_blurred">Bilinmeyen tüm parametreler varsayılan olarak bulanıklaştırılacaktır</string>
+    <string name="instructional_step_tap_show_values">Değerlerin bulanıklığını değiştirmek için \'Değerleri Göster\'e dokunun</string>
+    <string name="instructional_step_choose_share_copy">Temizlenmiş URL\'yi paylaşmayı veya kopyalamayı seçin</string>
+    
+    <!-- Content Descriptions -->
+    <string name="content_description_collapse_instructions">Talimatları daralt</string>
+    <string name="content_description_expand_instructions">Talimatları genişlet</string>
+    <string name="content_description_dropdown">Açılır menü</string>
+    
+    <!-- Rule Edit Dialog -->
+    <string name="rule_edit_add_new_rule">Yeni Kural Ekle</string>
+    <string name="rule_edit_edit_rule">Kuralı Düzenle</string>
+    <string name="rule_edit_save">Kaydet</string>
+    <string name="rule_edit_cancel">İptal</string>
+    <string name="rule_edit_domains">Domainler</string>
+    <string name="rule_edit_domains_label">Domainler (virgülle ayrılmış)</string>
+    <string name="rule_edit_domains_placeholder">ornek.com, test.org</string>
+    <string name="rule_edit_domains_supporting">Virgülle ayrılmış bir veya daha fazla domain girin</string>
+    <string name="rule_edit_subdomain_mode">Alt Domain Modu</string>
+    <string name="rule_edit_subdomain_mode_none">Yok</string>
+    <string name="rule_edit_subdomain_mode_any">Herhangi</string>
+    <string name="rule_edit_subdomain_mode_specific_list">Belirli Liste</string>
+    <string name="rule_edit_subdomain_mode_none_desc">Sadece tam domain eşleşmesi</string>
+    <string name="rule_edit_subdomain_mode_any_desc">Tüm alt domainleri dahil et (*.domain.com)</string>
+    <string name="rule_edit_subdomain_mode_specific_list_desc">Sadece belirtilen alt domainler</string>
+    <string name="rule_edit_subdomains_label">Alt Domainler (virgülle ayrılmış)</string>
+    <string name="rule_edit_subdomains_placeholder">www, api, cdn</string>
+    <string name="rule_edit_subdomains_supporting">Nokta olmadan alt domain adlarını girin (örn. www, api, cdn)</string>
+    <string name="rule_edit_remove_patterns">Kaldırma Desenleri</string>
+    <string name="rule_edit_remove_patterns_label">Desenler (virgülle ayrılmış)</string>
+    <string name="rule_edit_remove_patterns_placeholder">utm_*, gclid, fbclid</string>
+    <string name="rule_edit_remove_patterns_supporting">Kaldırılacak parametreler için glob desenleri (örn. utm_*, gclid)</string>
+    <string name="rule_edit_common_patterns">Yaygın desenler: %s</string>
+    <string name="rule_edit_warning_settings">Uyarı Ayarları</string>
+    <string name="rule_edit_warn_on_credentials">Gömülü kimlik bilgilerinde uyar</string>
+    <string name="rule_edit_sensitive_params">Hassas parametreler</string>
+    <string name="rule_edit_sensitive_params_label">Hassas parametreler (virgülle ayrılmış)</string>
+    <string name="rule_edit_sensitive_params_placeholder">sifre, token, anahtar</string>
+    <string name="rule_edit_sensitive_params_supporting">Mevcut olduğunda uyarı tetikleyecek parametreler</string>
+    
+    <!-- Rule Display -->
+    <string name="rule_display_all_domains">Tüm domainler</string>
+    <string name="rule_display_remove_count_single">%d parametre</string>
+    <string name="rule_display_remove_count_plural">%d parametre</string>
+    <string name="rule_display_remove_count_none">parametre yok</string>
+    <string name="rule_display_remove_from" formatted="false">%s\'den %s kaldır</string>
+    
+    <!-- URL Components -->
+    <string name="url_component_scheme_separator">://</string>
+    <string name="url_component_userinfo_separator">@</string>
+    <string name="url_component_port_separator">:</string>
+    <string name="url_component_query_start">?</string>
+    <string name="url_component_query_separator">&amp;</string>
+    <string name="url_component_param_equals">=</string>
+    <string name="url_component_fragment_start">#</string>
+    
+    <!-- Validation Messages -->
+    <string name="validation_subdomain_contains_dots">Alt domain nokta içermemeli: %s</string>
+    <string name="validation_invalid_subdomain_name">Geçersiz alt domain adı: %s</string>
 </resources>

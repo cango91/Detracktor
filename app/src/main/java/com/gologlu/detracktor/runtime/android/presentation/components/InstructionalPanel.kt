@@ -20,9 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gologlu.detracktor.R
 import com.gologlu.detracktor.runtime.android.presentation.types.InstructionalContent
 
 /**
@@ -34,6 +36,7 @@ fun InstructionalPanel(
     onToggleExpanded: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -73,9 +76,9 @@ fun InstructionalPanel(
                             Icons.Default.KeyboardArrowDown
                         },
                         contentDescription = if (content.isExpanded) {
-                            "Collapse instructions"
+                            context.getString(R.string.content_description_collapse_instructions)
                         } else {
-                            "Expand instructions"
+                            context.getString(R.string.content_description_expand_instructions)
                         },
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )

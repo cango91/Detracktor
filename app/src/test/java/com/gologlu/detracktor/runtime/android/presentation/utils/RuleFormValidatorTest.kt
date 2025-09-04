@@ -449,4 +449,161 @@ class RuleFormValidatorTest {
         assertFalse(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "www-").isEmpty())
         assertFalse(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "").isEmpty())
     }
+
+    // Additional tests to cover missing lines and edge cases
+
+    @Test
+    fun `validateSubdomainMode - with Android context for localized messages`() {
+        // This test covers the Android context branch that might be missing coverage
+        // We can't easily mock Android context in unit tests, but we can test the null path
+        val errors = validator.validateSubdomainMode(
+            SubdomainMode.SPECIFIC_LIST, 
+            "www.invalid, -bad", 
+            null // This should trigger the null context branch
+        )
+
+        assertEquals(2, errors.size)
+        assertTrue(errors.any { it.contains("Subdomain should not contain dots: www.invalid") })
+        assertTrue(errors.any { it.contains("Invalid subdomain name: -bad") })
+    }
+
+    @Test
+    fun `validateRemovePatterns - with blank patterns in list`() {
+        // Test the case where some patterns in the list are blank after trimming
+        val errors = validator.validateRemovePatterns("utm_*, , gclid, ")
+
+        // Should not produce errors for blank patterns, only invalid ones
+        assertTrue(errors.isEmpty())
+    }
+
+    @Test
+    fun `validateRemovePatterns - exception handling in Globby validation`() {
+        // Test patterns that might cause Globby to throw exceptions
+        // Using a pattern with trailing backslash which causes Globby.requireValid to throw
+        val errors = validator.validateRemovePatterns("valid_pattern, trailing\\")
+
+        // Should catch the exception and convert to error message
+        assertTrue(errors.size >= 1)
+        assertTrue(errors.any { it.contains("Invalid removal pattern at position 2") })
+    }
+
+    @Test
+    fun `validateComplete - third branch of hasRemove and hasWarn logic`() {
+        // Test the "else if (hasRemove && !hasWarn)" branch which might be missing coverage
+        val formData = RuleEditFormData(
+            domainsInput = "example.com",
+            subdomainMode = SubdomainMode.NONE,
+            subdomainsInput = "",
+            removePatternsInput = "utm_*", // Has remove patterns
+            warnOnCredentials = false,     // No warn on credentials
+            sensitiveParamsInput = ""      // No sensitive params
+        )
+
+        val result = validator.validateComplete(formData)
+
+        assertTrue(result.isValid)
+        assertTrue(result.errors.isEmpty())
+        assertTrue(result.warnings.isEmpty()) // This branch should produce no warnings
+    }
+
+    @Test
+    fun `validateSensitiveParams - empty params after parsing`() {
+        // Test edge case where input is not blank but results in empty params after parsing
+        val formData = RuleEditFormData(
+            domainsInput = "example.com",
+            subdomainMode = SubdomainMode.NONE,
+            subdomainsInput = "",
+            removePatternsInput = "utm_*",
+            warnOnCredentials = false,
+            sensitiveParamsInput = "   ,  ,  " // Only whitespace and commas
+        )
+
+        val result = validator.validateComplete(formData)
+
+        assertTrue(result.isValid)
+        assertTrue(result.warnings.isEmpty()) // Should not produce duplicate warnings
+    }
+
+    @Test
+    fun `parseCommaSeparatedList - edge cases`() {
+        // Test the comma-separated parsing behavior through public methods
+        // The implementation filters out blank entries, so empty strings won't be included
+        
+        // Test with only commas and whitespace - results in empty list after parsing, no error
+        val errors1 = validator.validateDomains("  ,  ,  ")
+        assertTrue(errors1.isEmpty()) // After parsing, empty entries are filtered out, no validation error
+
+        // Test with mixed valid and empty entries - empty entries should be filtered out
+        val errors2 = validator.validateDomains("example.com, , google.com, ")
+        assertTrue(errors2.isEmpty()) // Should filter out empty entries and validate remaining
+        
+        // Test with trailing/leading commas - empty entries filtered out
+        val errors3 = validator.validateDomains(",example.com,google.com,")
+        assertTrue(errors3.isEmpty())
+        
+        // Test subdomain parsing with empty entries
+        val errors4 = validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "www, , api, ")
+        assertTrue(errors4.isEmpty()) // Should filter out empty entries
+        
+        // Test removal patterns parsing with empty entries
+        val errors5 = validator.validateRemovePatterns("utm_*, , gclid, ")
+        assertTrue(errors5.isEmpty()) // Should filter out empty entries
+    }
+
+    @Test
+    fun `isValidDomainPattern - edge cases for regex matching`() {
+        // Test edge cases based on the actual regex implementation
+        // Regex: ^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$
+        
+        // Single character domain (should be valid)
+        assertTrue(validator.validateDomains("a").isEmpty())
+        
+        // Domain with hyphens (should be valid)
+        assertTrue(validator.validateDomains("example-site.com").isEmpty())
+        
+        // Domain starting with hyphen (should be invalid)
+        assertFalse(validator.validateDomains("-example.com").isEmpty())
+        
+        // Domain ending with hyphen (should be invalid)  
+        assertFalse(validator.validateDomains("example-.com").isEmpty())
+        
+        // Domain with double dots (should be invalid)
+        assertFalse(validator.validateDomains("example..com").isEmpty())
+        
+        // Domain starting with dot (should be invalid)
+        assertFalse(validator.validateDomains(".example.com").isEmpty())
+        
+        // Domain ending with dot (should be invalid)
+        assertFalse(validator.validateDomains("example.com.").isEmpty())
+        
+        // Wildcard (special case, should be valid)
+        assertTrue(validator.validateDomains("*").isEmpty())
+    }
+
+    @Test
+    fun `isValidSubdomainName - edge cases for regex matching`() {
+        // Test edge cases based on the actual subdomain regex implementation
+        // Regex: ^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?$
+        
+        // Single character subdomain (should be valid)
+        assertTrue(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "a").isEmpty())
+        
+        // Subdomain with hyphens (should be valid)
+        assertTrue(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "api-v1").isEmpty())
+        
+        // Subdomain with numbers (should be valid)
+        assertTrue(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "cdn1").isEmpty())
+        
+        // Subdomain starting with hyphen (should be invalid)
+        assertFalse(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "-invalid").isEmpty())
+        
+        // Subdomain ending with hyphen (should be invalid)
+        assertFalse(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "invalid-").isEmpty())
+        
+        // Subdomain with dots (should be invalid - checked separately)
+        assertFalse(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "www.api").isEmpty())
+        
+        // Empty subdomain (should be invalid)
+        assertFalse(validator.validateSubdomainMode(SubdomainMode.SPECIFIC_LIST, "").isEmpty())
+    }
 }

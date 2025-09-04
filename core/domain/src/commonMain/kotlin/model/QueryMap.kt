@@ -31,6 +31,7 @@ private typealias ParamValue = String
  * queryMap.get("KEY")   // returns ["value3"]
  * ```
  */
+@PlatformInline
 data class QueryMap private constructor(private val queryPairs: QueryPairs) {
     companion object {
         /**

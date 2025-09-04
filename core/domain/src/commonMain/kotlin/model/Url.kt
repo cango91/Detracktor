@@ -52,6 +52,7 @@ interface IUrl {
  * This is a value class wrapping [UrlParts] with additional validation to ensure
  * required components (scheme and host) are present.
  */
+@PlatformInline
 data class Url private constructor(val parts: UrlParts) : IUrl {
     override val scheme: String
         get() = parts.scheme ?: throw DomainException(ValidationError.InvalidUrl("Invalid URL: scheme is required"))

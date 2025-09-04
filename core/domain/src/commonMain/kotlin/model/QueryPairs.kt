@@ -7,6 +7,7 @@ package com.gologlu.detracktor.domain.model
  * 
  * This implementation ensures lossless round-trip conversion: from(queryString).asString() == queryString
  */
+@PlatformInline
 data class QueryPairs private constructor(val tokens: List<QueryToken>) {
     companion object {
         // Precompiled regex patterns to avoid compilation overhead in hot path

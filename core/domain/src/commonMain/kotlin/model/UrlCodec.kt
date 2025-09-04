@@ -1,6 +1,6 @@
 package com.gologlu.detracktor.domain.model
 
-import java.util.Locale
+// Platform imports handled by expect/actual implementations
 
 /**
  * Utility object for percent encoding and decoding operations in URL components.
@@ -45,27 +45,8 @@ object UrlCodec {
      * @return The percent-encoded string with unsafe characters as %XX sequences
      */
     fun percentEncodeUtf8(input: String): String {
-        val utf8Bytes = input.toByteArray(Charsets.UTF_8)
-        val result = StringBuilder(utf8Bytes.size * 3) // Worst case: every byte becomes %XX
-        
-        for (byte in utf8Bytes) {
-            val unsigned = byte.toInt() and 0xFF
-            
-            when {
-                // Unreserved ASCII characters (safe to keep as-is)
-                unsigned in 0x41..0x5A || // A-Z
-                unsigned in 0x61..0x7A || // a-z  
-                unsigned in 0x30..0x39 || // 0-9
-                unsigned == 0x2D || unsigned == 0x2E || unsigned == 0x5F || unsigned == 0x7E -> { // -._~
-                    result.append(unsigned.toChar())
-                }
-                // All other bytes (including unsafe ASCII and all non-ASCII) - encode
-                else -> {
-                    result.append("%${String.format(Locale.ROOT, "%02X", unsigned)}")
-                }
-            }
-        }
-        return result.toString()
+        // Use platform-specific encoding implementation
+        return PlatformUrlCodec.encode(input)
     }
     
     /**
@@ -108,39 +89,7 @@ object UrlCodec {
      * @return The decoded string with %XX sequences converted back to characters
      */
     fun percentDecodeUtf8(input: String): String {
-        val result = StringBuilder(input.length)
-        var i = 0
-        val hex = { c: Char -> Character.digit(c, 16) }
-        
-        while (i < input.length) {
-            val c = input[i]
-            if (c == '%' && i + 1 < input.length && i + 2 < input.length) {
-                val hi = hex(input[i + 1])
-                val lo = hex(input[i + 2])
-                if (hi >= 0 && lo >= 0) {
-                    // Found valid %XX - collect contiguous run for proper UTF-8 decoding
-                    val bytes = mutableListOf<Byte>()
-                    var j = i
-                    while (j + 1 < input.length && j + 2 < input.length && input[j] == '%') {
-                        val h = hex(input[j + 1])
-                        val l = hex(input[j + 2])
-                        if (h >= 0 && l >= 0) {
-                            bytes.add(((h shl 4) + l).toByte())
-                            j += 3
-                        } else {
-                            break
-                        }
-                    }
-                    // Decode the byte sequence as UTF-8
-                    result.append(String(bytes.toByteArray(), Charsets.UTF_8))
-                    i = j
-                    continue
-                }
-            }
-            // Not a valid %XX sequence - append character directly (preserves non-ASCII)
-            result.append(c)
-            i++
-        }
-        return result.toString()
+        // Use platform-specific decoding implementation
+        return PlatformUrlCodec.decode(input)
     }
 }

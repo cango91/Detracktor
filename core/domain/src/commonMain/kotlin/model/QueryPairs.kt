@@ -1,7 +1,5 @@
 package com.gologlu.detracktor.domain.model
 
-import java.util.Locale
-
 /**
  * Represents query parameters as an ordered list of query tokens that preserve exact wire format.
  * Unlike QueryMap, this preserves exact order, allows duplicate parameter names, and maintains
@@ -9,8 +7,7 @@ import java.util.Locale
  * 
  * This implementation ensures lossless round-trip conversion: from(queryString).asString() == queryString
  */
-@JvmInline
-value class QueryPairs private constructor(val tokens: List<QueryToken>) {
+data class QueryPairs private constructor(val tokens: List<QueryToken>) {
     companion object {
         // Precompiled regex patterns to avoid compilation overhead in hot path
         private val AMP_ONLY = "&".toRegex()
@@ -230,8 +227,5 @@ value class QueryPairs private constructor(val tokens: List<QueryToken>) {
     fun isNotEmpty(): Boolean = tokens.isNotEmpty()
     fun size(): Int = tokens.size
     
-    /**
-     * Get all tokens for debugging or advanced use cases.
-     */
-    fun getTokens(): List<QueryToken> = tokens
+    // Removed getTokens() function - use the 'tokens' property directly
 }

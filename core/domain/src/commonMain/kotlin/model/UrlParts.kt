@@ -1,6 +1,6 @@
 package com.gologlu.detracktor.domain.model
 
-import java.util.Locale
+// Platform-specific imports handled elsewhere
 
 /**
  * Represents the parsed components of a URL.

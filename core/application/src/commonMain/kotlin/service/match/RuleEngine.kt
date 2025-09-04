@@ -78,7 +78,7 @@ class DefaultRuleEngine : RuleEngine {
         val predicatesByRule: List<Triple<Int, (String) -> Boolean, String>> = matches.flatMap { rule ->
             rule.removePredicates.mapIndexed { idx, pred -> Triple(rule.index, pred, rule.removePatterns[idx]) }
         }
-        val tokens: List<QueryToken> = query.getTokens()
+        val tokens: List<QueryToken> = query.tokens
         for ((idx, token) in tokens.withIndex()) {
             val name = token.decodedKey
             val matchedDetails = predicatesByRule.filter { (_, pred, _) -> pred(name) }

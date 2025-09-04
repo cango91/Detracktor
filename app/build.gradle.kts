@@ -87,6 +87,10 @@ android {
 }
 
 dependencies {
+    // Core business logic modules
+    implementation(project(":core:domain"))
+    implementation(project(":core:application"))
+    
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -101,7 +105,7 @@ dependencies {
     implementation(libs.gson)  // JSON parsing
     implementation(libs.androidx.preference.ktx)  // Settings
     
-    // Enhanced URL cleaning dependencies
+    // Enhanced URL cleaning dependencies (Android-specific implementations)
     implementation(libs.icu4j)  // IDN and internationalization support
     implementation(libs.commons.lang3)
     // Enhanced regex and pattern matching

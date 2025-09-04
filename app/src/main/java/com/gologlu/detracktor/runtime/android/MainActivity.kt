@@ -668,7 +668,7 @@ private fun buildAnnotatedUrl(
 ): AnnotatedString {
     fun obfuscate(value: String): String = if (!blurEnabled) value else if (value.isEmpty()) "" else "••••••"
 
-    val tokens: List<QueryToken> = parts.queryPairs.getTokens()
+    val tokens: List<QueryToken> = parts.queryPairs.tokens
     val effectsByIndex = tokenEffects.associateBy { it.tokenIndex }
     
     return buildAnnotatedString {
@@ -751,7 +751,7 @@ private fun summarizeWarnings(
         warnings.add(context.getString(R.string.warning_embedded_detected))
     }
     eval.effectiveWarnings.sensitiveParams?.let { sens ->
-        val present = parts.queryPairs.getTokens().map { it.decodedKey }.toSet().intersect(sens.toSet())
+        val present = parts.queryPairs.tokens.map { it.decodedKey }.toSet().intersect(sens.toSet())
         if (present.isNotEmpty()) warnings.add(context.getString(R.string.warning_sensitive_params_found, present.joinToString(", ")))
     }
     if (eval.matches.isNotEmpty()) {
@@ -768,7 +768,7 @@ private fun hasWarnings(
     if (warnCreds == true && !parts.userInfo.isNullOrEmpty()) return true
     val sens = eval.effectiveWarnings.sensitiveParams
     if (sens != null && sens.isNotEmpty()) {
-        val present = parts.queryPairs.getTokens().map { it.decodedKey }.toSet().intersect(sens.toSet())
+        val present = parts.queryPairs.tokens.map { it.decodedKey }.toSet().intersect(sens.toSet())
         if (present.isNotEmpty()) return true
     }
     return false
@@ -785,7 +785,7 @@ private fun buildWarningData(
     val hasCredentials = (eval.effectiveWarnings.warnOnEmbeddedCredentials == true) && !parts.userInfo.isNullOrEmpty()
     
     val sensitiveParams = eval.effectiveWarnings.sensitiveParams?.let { sens ->
-        parts.queryPairs.getTokens().map { it.decodedKey }.toSet().intersect(sens.toSet()).toList()
+        parts.queryPairs.tokens.map { it.decodedKey }.toSet().intersect(sens.toSet()).toList()
     } ?: emptyList()
     
     return WarningDisplayData(

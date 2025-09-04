@@ -239,7 +239,7 @@ private fun getHostDisplayText(rule: UrlRule): String {
                 is com.gologlu.detracktor.application.types.Subdomains.Any -> "*."
                 is com.gologlu.detracktor.application.types.Subdomains.None -> ""
                 is com.gologlu.detracktor.application.types.Subdomains.OneOf -> {
-                    val labels = rule.when_.host.subdomains.labels.filter { it.isNotBlank() }
+                    val labels = (rule.when_.host.subdomains as com.gologlu.detracktor.application.types.Subdomains.OneOf).labels.filter { it.isNotBlank() }
                     if (labels.isEmpty()) "" else "${labels.joinToString("|")}."
                 }
                 null -> ""

@@ -168,7 +168,7 @@ fun UrlRule.getDescription(context: Context): String {
             when (when_.host.subdomains) {
                 is Subdomains.Any -> "*.${host}"
                 is Subdomains.None -> host
-                is Subdomains.OneOf -> "${when_.host.subdomains.labels.joinToString("|")}.${host}"
+                is Subdomains.OneOf -> "${(when_.host.subdomains as Subdomains.OneOf).labels.joinToString("|")}.${host}"
                 null -> host
             }
         }

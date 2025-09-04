@@ -85,7 +85,7 @@ private fun buildInlineBlurredUrl(
     highlight: Color,
     muted: Color
 ): AnnotatedString {
-    val tokens: List<QueryToken> = parts.queryPairs.getTokens()
+    val tokens: List<QueryToken> = parts.queryPairs.tokens
     val effectsByIndex = tokenEffects.associateBy { it.tokenIndex }
     
     return buildAnnotatedString {
@@ -172,7 +172,7 @@ private fun renderInlineUrlComponents(
     highlight: Color,
     muted: Color
 ) {
-    val tokens: List<QueryToken> = parts.queryPairs.getTokens()
+    val tokens: List<QueryToken> = parts.queryPairs.tokens
     val effectsByIndex = tokenEffects.associateBy { it.tokenIndex }
     val colors = DetracktorTheme.colors
     

@@ -310,7 +310,7 @@ class UrlParserImplTest {
         assertEquals("https", parts.scheme)
         assertEquals("example.com", parts.host)
         assertNotNull(parts.path)
-        assertTrue(parts.path.length > 1000, "Path should be very long")
+        assertTrue(parts.path!!.length > 1000, "Path should be very long")
     }
     
     @Test
@@ -330,7 +330,7 @@ class UrlParserImplTest {
             assertTrue(result.isSuccess, "Should parse IPv4 address: $url")
             val parts = result.getOrNull()!!
             assertNotNull(parts.host, "Host should not be null for IPv4: $url")
-            assertTrue(parts.host.matches(Regex("""\d+\.\d+\.\d+\.\d+""")), "Should be valid IPv4: ${parts.host}")
+            assertTrue(parts.host!!.matches(Regex("""\d+\.\d+\.\d+\.\d+""")), "Should be valid IPv4: ${parts.host}")
         }
     }
     
@@ -513,7 +513,7 @@ class UrlParserImplTest {
                 val parts = result.getOrNull()!!
                 // Basic validation for successful parses
                 if (parts.scheme != null) {
-                    assertTrue(parts.scheme.isNotEmpty(), "Scheme should not be empty for: $url")
+                    assertTrue(parts.scheme!!.isNotEmpty(), "Scheme should not be empty for: $url")
                 }
             }
         }

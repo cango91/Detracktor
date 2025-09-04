@@ -12,7 +12,7 @@ import com.gologlu.detracktor.application.types.WhenBlock
 import com.gologlu.detracktor.application.service.globby.Globby
 import com.gologlu.detracktor.application.service.net.HostCanonicalizer
 import com.gologlu.detracktor.domain.model.UrlParts
-import java.util.Locale
+// Locale-related functions handled platform-specifically
 
 /** Compiled representation of a single site rule for fast matching. */
 data class CompiledSiteRule(
@@ -47,7 +47,7 @@ object MatchService {
 
     context(hostCanonicalizer: HostCanonicalizer)
     fun findMatches(parts: UrlParts, ruleset: CompiledRuleset): List<CompiledSiteRule> {
-        val scheme = parts.scheme?.lowercase(Locale.ROOT)
+        val scheme = parts.scheme?.lowercase()
         val host = parts.host
         return ruleset.sites.asSequence()
             .filter { rule -> scheme == null || scheme in rule.schemeSet }
@@ -56,7 +56,7 @@ object MatchService {
     }
 
     private fun compileSchemes(siteIndex: Int, whenBlock: WhenBlock): Set<String> {
-        val schemes = whenBlock.schemes?.map { it.lowercase(Locale.ROOT) } ?: listOf("http", "https")
+        val schemes = whenBlock.schemes?.map { it.lowercase() } ?: listOf("http", "https")
         if (schemes.isEmpty()) {
             throw AppValidationException(AppValidationError("schemes cannot be empty", "sites[$siteIndex].when.schemes"))
         }
@@ -106,7 +106,7 @@ class HostMatcher private constructor(
                 is Subdomains.OneOf -> {
                     // Accept "" in the list to mean "no subdomain is also allowed".
                     val includesNone = s.labels.any { it.isEmpty() }
-                    val labelSet = s.labels.filter { it.isNotEmpty() }.map { it.lowercase(Locale.ROOT) }.toSet()
+                    val labelSet = s.labels.filter { it.isNotEmpty() }.map { it.lowercase() }.toSet()
                     SubdomainsSpec.OneOf(labelSet, includesNone)
                 }
             }

@@ -5,8 +5,6 @@ import com.gologlu.detracktor.domain.error.ValidationError
 import com.gologlu.detracktor.domain.error.flatMap
 import com.gologlu.detracktor.domain.error.getOrThrow
 import com.gologlu.detracktor.domain.service.UrlParser
-import java.util.Locale
-
 /**
  * Interface defining the contract for URL-like objects.
  * Provides access to standard URL components and string conversion.
@@ -54,8 +52,7 @@ interface IUrl {
  * This is a value class wrapping [UrlParts] with additional validation to ensure
  * required components (scheme and host) are present.
  */
-@JvmInline
-value class Url private constructor(val parts: UrlParts) : IUrl {
+data class Url private constructor(val parts: UrlParts) : IUrl {
     override val scheme: String
         get() = parts.scheme ?: throw DomainException(ValidationError.InvalidUrl("Invalid URL: scheme is required"))
     override val host: String

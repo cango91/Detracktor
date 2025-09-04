@@ -99,8 +99,12 @@ object BlurStateCalculator {
     ): String {
         if (originalValue.isEmpty()) return ""
         
+        // Handle edge case where minLength > maxLength by using the maximum of the two
+        val effectiveMinLength = minLength
+        val effectiveMaxLength = maxOf(minLength, maxLength)
+        
         // Use a length based on the original value but within bounds
-        val maskLength = originalValue.length.coerceIn(minLength, maxLength)
+        val maskLength = originalValue.length.coerceIn(effectiveMinLength, effectiveMaxLength)
         return maskChar.toString().repeat(maskLength)
     }
     

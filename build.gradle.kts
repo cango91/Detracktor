@@ -7,7 +7,7 @@ plugins {
 
 buildscript {
     dependencies {
-        classpath("org.jacoco:org.jacoco.core:0.8.13") // Use the latest version
+        classpath(libs.org.jacoco.core)
     }
     repositories {
         google()

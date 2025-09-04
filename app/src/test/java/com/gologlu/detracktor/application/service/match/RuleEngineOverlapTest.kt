@@ -1,17 +1,20 @@
 package com.gologlu.detracktor.application.service.match
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gologlu.detracktor.application.service.net.HostCanonicalizer
 import com.gologlu.detracktor.application.types.*
-import com.gologlu.detracktor.domain.model.MaybeUrl
+import com.gologlu.detracktor.domain.error.DomainResult
 import com.gologlu.detracktor.domain.model.UrlParts
 import com.gologlu.detracktor.runtime.android.service.net.UrlParserImpl
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import kotlin.test.DefaultAsserter.assertTrue
+import kotlin.test.assertEquals
 
-@RunWith(AndroidJUnit4::class)
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [29])
 class RuleEngineOverlapTest {
 
     private val hostCanonicalizer: HostCanonicalizer = HostCanonicalizer { raw ->
@@ -20,10 +23,10 @@ class RuleEngineOverlapTest {
     }
 
     private fun parse(url: String): UrlParts {
-        val res = UrlParserImpl().parse(url as MaybeUrl)
+        val res = UrlParserImpl().parse(url)
         return when (res) {
-            is com.gologlu.detracktor.domain.error.DomainResult.Success -> res.value
-            is com.gologlu.detracktor.domain.error.DomainResult.Failure -> error("Invalid test URL: $url")
+            is DomainResult.Success -> res.value
+            is DomainResult.Failure -> error("Invalid test URL: $url - ${res.error}")
         }
     }
 
@@ -54,7 +57,7 @@ class RuleEngineOverlapTest {
         val eval = with(hostCanonicalizer) { engine.evaluate(parts) }
         // a_* and b_* should be marked for removal
         val removeNames = eval.tokenEffects.filter { it.willBeRemoved }.map { it.name }.toSet()
-        assertTrue(removeNames.containsAll(listOf("a_x", "a_y", "b_x")))
+        assertTrue("Removes union of both rules", removeNames.containsAll(listOf("a_x", "a_y", "b_x")))
 
         val cleaned = with(hostCanonicalizer) { engine.applyRemovals(parts) }
         val cleanedQuery = cleaned.rawQuery
@@ -83,7 +86,7 @@ class RuleEngineOverlapTest {
         val partsSpecific = parse("https://user:pass@example.com/?token=1&pwd=2&x=3")
         val evalSpecific = with(hostCanonicalizer) { engine.evaluate(partsSpecific) }
         assertEquals(true, evalSpecific.effectiveWarnings.warnOnEmbeddedCredentials)
-        assertEquals(emptyList<String>(), evalSpecific.effectiveWarnings.sensitiveParams)
+        assertEquals(emptyList(), evalSpecific.effectiveWarnings.sensitiveParams)
 
         // For other host: creds true, sens from catch-all
         val partsOther = parse("https://other.com/?token=1&pwd=2&x=3")
@@ -109,5 +112,3 @@ class RuleEngineOverlapTest {
         assertEquals(listOf("secret"), eval.effectiveWarnings.sensitiveParams)
     }
 }
-
-

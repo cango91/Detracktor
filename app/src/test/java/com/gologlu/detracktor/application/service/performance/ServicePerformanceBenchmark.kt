@@ -9,6 +9,7 @@ import com.gologlu.detracktor.application.types.ThenBlock
 import com.gologlu.detracktor.application.types.UrlRule
 import com.gologlu.detracktor.application.types.WhenBlock
 import com.gologlu.detracktor.application.types.Pattern
+import com.gologlu.detracktor.domain.error.DomainResult
 import com.gologlu.detracktor.domain.error.isSuccess
 import com.gologlu.detracktor.domain.error.getOrThrow
 import org.junit.Test

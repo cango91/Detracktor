@@ -11,9 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.gologlu.detracktor.R
 import com.gologlu.detracktor.application.types.UrlRule
 import com.gologlu.detracktor.runtime.android.presentation.types.*
 import com.gologlu.detracktor.runtime.android.presentation.ui.theme.DetracktorTheme
@@ -30,17 +33,18 @@ fun RuleEditDialog(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val validator = remember { RuleFormValidator() }
     var formData by remember { 
         mutableStateOf(rule?.toFormData() ?: RuleEditFormData()) 
     }
     var validationResult by remember { 
-        mutableStateOf(validator.validateComplete(formData)) 
+        mutableStateOf(validator.validateComplete(formData, context)) 
     }
     
     // Update validation when form data changes
     LaunchedEffect(formData) {
-        validationResult = validator.validateComplete(formData)
+        validationResult = validator.validateComplete(formData, context)
     }
     
     AlertDialog(
@@ -48,7 +52,7 @@ fun RuleEditDialog(
         modifier = modifier.testTag("rule-edit-dialog"),
         title = {
             Text(
-                text = if (rule == null) "Add New Rule" else "Edit Rule",
+                text = if (rule == null) context.getString(R.string.rule_edit_add_new_rule) else context.getString(R.string.rule_edit_edit_rule),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Medium
             )
@@ -109,7 +113,7 @@ fun RuleEditDialog(
                 enabled = validationResult.isValid,
                 modifier = Modifier.testTag("save-rule-button")
             ) {
-                Text("Save")
+                Text(context.getString(R.string.rule_edit_save))
             }
         },
         dismissButton = {
@@ -117,7 +121,7 @@ fun RuleEditDialog(
                 onClick = onCancel,
                 modifier = Modifier.testTag("cancel-rule-button")
             ) {
-                Text("Cancel")
+                Text(context.getString(R.string.rule_edit_cancel))
             }
         }
     )
@@ -128,11 +132,12 @@ private fun DomainsSection(
     domainsInput: String,
     onDomainsInputChange: (String) -> Unit
 ) {
+    val context = LocalContext.current
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Domains",
+            text = context.getString(R.string.rule_edit_domains),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium,
             color = DetracktorTheme.colors.onSurface
@@ -141,11 +146,11 @@ private fun DomainsSection(
         OutlinedTextField(
             value = domainsInput,
             onValueChange = onDomainsInputChange,
-            label = { Text("Domains (comma-separated)") },
-            placeholder = { Text("example.com, test.org") },
+            label = { Text(context.getString(R.string.rule_edit_domains_label)) },
+            placeholder = { Text(context.getString(R.string.rule_edit_domains_placeholder)) },
             supportingText = { 
                 Text(
-                    "Enter one or more domains separated by commas",
+                    context.getString(R.string.rule_edit_domains_supporting),
                     style = MaterialTheme.typography.bodySmall,
                     color = DetracktorTheme.colors.onSurfaceVariant
                 )
@@ -167,13 +172,14 @@ private fun SubdomainModeSection(
     onSubdomainModeChange: (SubdomainMode) -> Unit,
     onSubdomainsInputChange: (String) -> Unit
 ) {
+    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Subdomain Mode",
+            text = context.getString(R.string.rule_edit_subdomain_mode),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium,
             color = DetracktorTheme.colors.onSurface
@@ -187,17 +193,17 @@ private fun SubdomainModeSection(
         ) {
             OutlinedTextField(
                 value = when (subdomainMode) {
-                    SubdomainMode.NONE -> "None"
-                    SubdomainMode.ANY -> "Any"
-                    SubdomainMode.SPECIFIC_LIST -> "Specific List"
+                    SubdomainMode.NONE -> context.getString(R.string.rule_edit_subdomain_mode_none)
+                    SubdomainMode.ANY -> context.getString(R.string.rule_edit_subdomain_mode_any)
+                    SubdomainMode.SPECIFIC_LIST -> context.getString(R.string.rule_edit_subdomain_mode_specific_list)
                 },
                 onValueChange = { },
                 readOnly = true,
-                label = { Text("Subdomain Mode") },
+                label = { Text(context.getString(R.string.rule_edit_subdomain_mode)) },
                 trailingIcon = {
                     Icon(
                         Icons.Default.ArrowDropDown,
-                        contentDescription = "Dropdown"
+                        contentDescription = context.getString(R.string.content_description_dropdown)
                     )
                 },
                 modifier = Modifier
@@ -215,17 +221,17 @@ private fun SubdomainModeSection(
                             Column {
                                 Text(
                                     text = when (mode) {
-                                        SubdomainMode.NONE -> "None"
-                                        SubdomainMode.ANY -> "Any"
-                                        SubdomainMode.SPECIFIC_LIST -> "Specific List"
+                                        SubdomainMode.NONE -> context.getString(R.string.rule_edit_subdomain_mode_none)
+                                        SubdomainMode.ANY -> context.getString(R.string.rule_edit_subdomain_mode_any)
+                                        SubdomainMode.SPECIFIC_LIST -> context.getString(R.string.rule_edit_subdomain_mode_specific_list)
                                     },
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Text(
                                     text = when (mode) {
-                                        SubdomainMode.NONE -> "Exact domain match only"
-                                        SubdomainMode.ANY -> "Include all subdomains (*.domain.com)"
-                                        SubdomainMode.SPECIFIC_LIST -> "Only specified subdomains"
+                                        SubdomainMode.NONE -> context.getString(R.string.rule_edit_subdomain_mode_none_desc)
+                                        SubdomainMode.ANY -> context.getString(R.string.rule_edit_subdomain_mode_any_desc)
+                                        SubdomainMode.SPECIFIC_LIST -> context.getString(R.string.rule_edit_subdomain_mode_specific_list_desc)
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = DetracktorTheme.colors.onSurfaceVariant
@@ -247,11 +253,11 @@ private fun SubdomainModeSection(
             OutlinedTextField(
                 value = subdomainsInput,
                 onValueChange = onSubdomainsInputChange,
-                label = { Text("Subdomains (comma-separated)") },
-                placeholder = { Text("www, api, cdn") },
+                label = { Text(context.getString(R.string.rule_edit_subdomains_label)) },
+                placeholder = { Text(context.getString(R.string.rule_edit_subdomains_placeholder)) },
                 supportingText = { 
                     Text(
-                        "Enter subdomain names without dots (e.g., www, api, cdn)",
+                        context.getString(R.string.rule_edit_subdomains_supporting),
                         style = MaterialTheme.typography.bodySmall,
                         color = DetracktorTheme.colors.onSurfaceVariant
                     )
@@ -271,11 +277,12 @@ private fun RemovePatternsSection(
     removePatternsInput: String,
     onRemovePatternsInputChange: (String) -> Unit
 ) {
+    val context = LocalContext.current
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Remove Patterns",
+            text = context.getString(R.string.rule_edit_remove_patterns),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Medium,
             color = DetracktorTheme.colors.onSurface
@@ -284,11 +291,11 @@ private fun RemovePatternsSection(
         OutlinedTextField(
             value = removePatternsInput,
             onValueChange = onRemovePatternsInputChange,
-            label = { Text("Patterns (comma-separated)") },
-            placeholder = { Text("utm_*, gclid, fbclid") },
+            label = { Text(context.getString(R.string.rule_edit_remove_patterns_label)) },
+            placeholder = { Text(context.getString(R.string.rule_edit_remove_patterns_placeholder)) },
             supportingText = { 
                 Text(
-                    "Glob patterns for parameters to remove (e.g., utm_*, gclid)",
+                    context.getString(R.string.rule_edit_remove_patterns_supporting),
                     style = MaterialTheme.typography.bodySmall,
                     color = DetracktorTheme.colors.onSurfaceVariant
                 )
@@ -302,7 +309,7 @@ private fun RemovePatternsSection(
         
         // Hint text for common patterns
         Text(
-            text = "Common patterns: ${RuleFormValidator.COMMON_TRACKING_PATTERNS.take(6).joinToString(", ")}",
+            text = context.getString(R.string.rule_edit_common_patterns, RuleFormValidator.COMMON_TRACKING_PATTERNS.take(6).joinToString(", ")),
             style = MaterialTheme.typography.bodySmall,
             color = DetracktorTheme.colors.onSurfaceVariant
         )
@@ -319,6 +326,7 @@ private fun WarningSettingsSection(
     onSensitiveParamsInputChange: (String) -> Unit,
     onMergeModeChange: (SensitiveMergeModeUi) -> Unit
 ) {
+    val context = LocalContext.current
     var showWarnings by remember { mutableStateOf(warnOnCredentials || sensitiveParamsInput.isNotBlank()) }
     
     Column(
@@ -344,7 +352,7 @@ private fun WarningSettingsSection(
                 modifier = Modifier.testTag("warning-settings-switch")
             )
             Text(
-                text = "Warning Settings",
+                text = context.getString(R.string.rule_edit_warning_settings),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
                 color = DetracktorTheme.colors.onSurface,
@@ -365,7 +373,7 @@ private fun WarningSettingsSection(
                     onCheckedChange = onWarnOnCredentialsChange
                 )
                 Text(
-                    text = "Warn on embedded credentials",
+                    text = context.getString(R.string.rule_edit_warn_on_credentials),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(start = 8.dp)
                 )
@@ -379,11 +387,11 @@ private fun WarningSettingsSection(
                 OutlinedTextField(
                     value = sensitiveParamsInput,
                     onValueChange = onSensitiveParamsInputChange,
-                    label = { Text("Sensitive Parameters (comma-separated)") },
-                    placeholder = { Text("token, key, password") },
+                    label = { Text(context.getString(R.string.rule_edit_sensitive_params_label)) },
+                    placeholder = { Text(context.getString(R.string.rule_edit_sensitive_params_placeholder)) },
                     supportingText = { 
                         Text(
-                            "Parameters that should trigger warnings when present",
+                            context.getString(R.string.rule_edit_sensitive_params_supporting),
                             style = MaterialTheme.typography.bodySmall,
                             color = DetracktorTheme.colors.onSurfaceVariant
                         )

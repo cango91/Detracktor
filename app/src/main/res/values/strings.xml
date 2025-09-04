@@ -151,4 +151,104 @@
     <string name="rule_match_unknown_domain">unknown</string>
     <string name="rule_match_matched_label">Matched:</string>
     <string name="rule_match_total_matched">(%d matched)</string>
+    
+    <!-- New Status Messages -->
+    <string name="status_processing_url">Processing URL...</string>
+    <string name="status_clipboard_empty">Clipboard empty</string>
+    <string name="status_clipboard_non_text">Clipboard contains non-text content</string>
+    <string name="status_clipboard_text_not_url">Clipboard text is not a valid URL</string>
+    <string name="status_not_a_url">Not a URL</string>
+    
+    <!-- Error Messages -->
+    <string name="error_clipboard_empty_copy_url">Clipboard is empty - copy a URL first</string>
+    <string name="error_clipboard_non_text_content">Clipboard contains non-text content</string>
+    <string name="error_clipboard_text_not_url">Clipboard text is not a valid URL</string>
+    <string name="error_invalid_url_parsing">Invalid URL: %s</string>
+    
+    <!-- Instructional Content -->
+    <string name="instructional_title_how_to_use">How to Use Detracktor</string>
+    <string name="instructional_title_clipboard_not_supported">Clipboard Content Not Supported</string>
+    <string name="instructional_title_invalid_url_format">Invalid URL Format</string>
+    <string name="instructional_title_url_ready">URL Ready for Cleaning</string>
+    
+    <!-- Instructional Steps -->
+    <string name="instructional_step_copy_url">Copy a URL to your clipboard from any app</string>
+    <string name="instructional_step_return_detracktor">Return to Detracktor - it will automatically detect the URL</string>
+    <string name="instructional_step_review_parameters">Review which tracking parameters will be removed</string>
+    <string name="instructional_step_tap_clean_url">Tap \'Clean URL\' to remove tracking parameters</string>
+    <string name="instructional_step_share_or_copy">Share or copy the cleaned URL</string>
+    <string name="instructional_step_direct_share">You can directly share to Detracktor from any app to get a cleaned URL automatically</string>
+    <string name="instructional_step_customize_rules">Customize site-specific rules in the settings</string>
+    
+    <string name="instructional_step_text_urls_only">Detracktor works with text URLs only</string>
+    <string name="instructional_step_copy_url_text">Copy a URL as text from your browser or another app</string>
+    <string name="instructional_step_return_to_clean">Return to Detracktor to clean the URL</string>
+    
+    <string name="instructional_step_text_not_valid_url">The text in your clipboard is not a valid URL</string>
+    <string name="instructional_step_include_https">Make sure to copy the complete URL including \'https://\'</string>
+    <string name="instructional_step_urls_start_http">URLs should start with http:// or https://</string>
+    <string name="instructional_step_try_copying_again">Try copying the URL again from the address bar</string>
+    
+    <string name="instructional_step_review_url_preview">Review the URL preview above</string>
+    <string name="instructional_step_sensitive_data_warnings">If there is any potential sensitive data, warnings will be shown below the URL</string>
+    <string name="instructional_step_trackers_shown">If any trackers are recognized, they will be shown below the URL</string>
+    <string name="instructional_step_unknown_params_blurred">All unknown parameters will be blurred by default</string>
+    <string name="instructional_step_tap_show_values">Tap \'Show Values\' to toggle blurring of values</string>
+    <string name="instructional_step_choose_share_copy">Choose to share or copy the cleaned URL</string>
+    
+    <!-- Content Descriptions -->
+    <string name="content_description_collapse_instructions">Collapse instructions</string>
+    <string name="content_description_expand_instructions">Expand instructions</string>
+    <string name="content_description_dropdown">Dropdown</string>
+    
+    <!-- Rule Edit Dialog -->
+    <string name="rule_edit_add_new_rule">Add New Rule</string>
+    <string name="rule_edit_edit_rule">Edit Rule</string>
+    <string name="rule_edit_save">Save</string>
+    <string name="rule_edit_cancel">Cancel</string>
+    <string name="rule_edit_domains">Domains</string>
+    <string name="rule_edit_domains_label">Domains (comma-separated)</string>
+    <string name="rule_edit_domains_placeholder">example.com, test.org</string>
+    <string name="rule_edit_domains_supporting">Enter one or more domains separated by commas</string>
+    <string name="rule_edit_subdomain_mode">Subdomain Mode</string>
+    <string name="rule_edit_subdomain_mode_none">None</string>
+    <string name="rule_edit_subdomain_mode_any">Any</string>
+    <string name="rule_edit_subdomain_mode_specific_list">Specific List</string>
+    <string name="rule_edit_subdomain_mode_none_desc">Exact domain match only</string>
+    <string name="rule_edit_subdomain_mode_any_desc">Include all subdomains (*.domain.com)</string>
+    <string name="rule_edit_subdomain_mode_specific_list_desc">Only specified subdomains</string>
+    <string name="rule_edit_subdomains_label">Subdomains (comma-separated)</string>
+    <string name="rule_edit_subdomains_placeholder">www, api, cdn</string>
+    <string name="rule_edit_subdomains_supporting">Enter subdomain names without dots (e.g., www, api, cdn)</string>
+    <string name="rule_edit_remove_patterns">Remove Patterns</string>
+    <string name="rule_edit_remove_patterns_label">Patterns (comma-separated)</string>
+    <string name="rule_edit_remove_patterns_placeholder">utm_*, gclid, fbclid</string>
+    <string name="rule_edit_remove_patterns_supporting">Glob patterns for parameters to remove (e.g., utm_*, gclid)</string>
+    <string name="rule_edit_common_patterns">Common patterns: %s</string>
+    <string name="rule_edit_warning_settings">Warning Settings</string>
+    <string name="rule_edit_warn_on_credentials">Warn on embedded credentials</string>
+    <string name="rule_edit_sensitive_params">Sensitive parameters</string>
+    <string name="rule_edit_sensitive_params_label">Sensitive parameters (comma-separated)</string>
+    <string name="rule_edit_sensitive_params_placeholder">password, token, key</string>
+    <string name="rule_edit_sensitive_params_supporting">Parameters that should trigger warnings when present</string>
+    
+    <!-- Rule Display -->
+    <string name="rule_display_all_domains">All domains</string>
+    <string name="rule_display_remove_count_single">%d parameter</string>
+    <string name="rule_display_remove_count_plural">%d parameters</string>
+    <string name="rule_display_remove_count_none">no parameters</string>
+    <string name="rule_display_remove_from" formatted="false">Remove %s from %s</string>
+    
+    <!-- URL Components -->
+    <string name="url_component_scheme_separator">://</string>
+    <string name="url_component_userinfo_separator">@</string>
+    <string name="url_component_port_separator">:</string>
+    <string name="url_component_query_start">?</string>
+    <string name="url_component_query_separator">&amp;</string>
+    <string name="url_component_param_equals">=</string>
+    <string name="url_component_fragment_start">#</string>
+    
+    <!-- Validation Messages -->
+    <string name="validation_subdomain_contains_dots">Subdomain should not contain dots: %s</string>
+    <string name="validation_invalid_subdomain_name">Invalid subdomain name: %s</string>
 </resources>

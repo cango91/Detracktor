@@ -10,12 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.gologlu.detracktor.R
 import com.gologlu.detracktor.application.service.match.TokenEffect
 import com.gologlu.detracktor.domain.model.QueryToken
 import com.gologlu.detracktor.runtime.android.presentation.types.TokenEffectType
@@ -38,12 +41,14 @@ fun UrlPreviewInlineBlur(
     muted: Color,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.testTag("url-preview-inline-blur")
     ) {
         // Build complete URL with inline parameters and blur effects
         val inlineUrl = buildInlineBlurredUrl(
+            context = context,
             parts = parts,
             tokenEffects = tokenEffects,
             blurEnabled = blurEnabled,
@@ -58,6 +63,7 @@ fun UrlPreviewInlineBlur(
             modifier = Modifier.testTag("url-inline-flow")
         ) {
             renderInlineUrlComponents(
+                context = context,
                 parts = parts,
                 tokenEffects = tokenEffects,
                 blurEnabled = blurEnabled,
@@ -72,6 +78,7 @@ fun UrlPreviewInlineBlur(
  * Build the complete URL with inline parameters as AnnotatedString
  */
 private fun buildInlineBlurredUrl(
+    context: Context,
     parts: UrlParts,
     tokenEffects: List<TokenEffect>,
     blurEnabled: Boolean,
@@ -85,7 +92,7 @@ private fun buildInlineBlurredUrl(
         // scheme://
         parts.scheme?.let { 
             pushStyle(SpanStyle(color = muted))
-            append("$it://")
+            append("$it${context.getString(R.string.url_component_scheme_separator)}")
             pop()
         }
 
@@ -94,7 +101,7 @@ private fun buildInlineBlurredUrl(
             pushStyle(SpanStyle(color = muted))
             append(ui)
             pop()
-            append("@")
+            append(context.getString(R.string.url_component_userinfo_separator))
         }
 
         // host
@@ -107,7 +114,7 @@ private fun buildInlineBlurredUrl(
         // :port
         parts.port?.let { p ->
             pushStyle(SpanStyle(color = muted))
-            append(":$p")
+            append("${context.getString(R.string.url_component_port_separator)}$p")
             pop()
         }
 
@@ -120,9 +127,9 @@ private fun buildInlineBlurredUrl(
 
         // ?query parameters inline
         if (tokens.isNotEmpty()) {
-            append("?")
+            append(context.getString(R.string.url_component_query_start))
             tokens.forEachIndexed { idx, tok ->
-                if (idx > 0) append("&")
+                if (idx > 0) append(context.getString(R.string.url_component_query_separator))
                 val eff = effectsByIndex[idx]
                 val isRemoval = eff?.willBeRemoved == true
                 val keyColor = if (isRemoval) highlight else muted
@@ -134,7 +141,7 @@ private fun buildInlineBlurredUrl(
                 pop()
 
                 if (tok.hasEquals) {
-                    append("=")
+                    append(context.getString(R.string.url_component_param_equals))
                     // value - will be blurred via modifier if needed
                     pushStyle(SpanStyle(color = valueColor))
                     append(tok.decodedValue)
@@ -145,7 +152,7 @@ private fun buildInlineBlurredUrl(
 
         // #fragment
         parts.fragment?.let { f ->
-            append("#")
+            append(context.getString(R.string.url_component_fragment_start))
             pushStyle(SpanStyle(color = muted))
             append(f)
             pop()
@@ -158,6 +165,7 @@ private fun buildInlineBlurredUrl(
  */
 @Composable
 private fun renderInlineUrlComponents(
+    context: Context,
     parts: UrlParts,
     tokenEffects: List<TokenEffect>,
     blurEnabled: Boolean,
@@ -171,7 +179,7 @@ private fun renderInlineUrlComponents(
     // Scheme
     parts.scheme?.let { scheme ->
         Text(
-            text = "$scheme://",
+            text = "$scheme${context.getString(R.string.url_component_scheme_separator)}",
             color = colors.urlScheme,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("scheme")
@@ -183,7 +191,7 @@ private fun renderInlineUrlComponents(
         val displayText = if (blurEnabled) {
             BlurStateCalculator.generateMask(ui)
         } else {
-            "$ui@"
+            "$ui${context.getString(R.string.url_component_userinfo_separator)}"
         }
         
         Text(
@@ -209,7 +217,7 @@ private fun renderInlineUrlComponents(
     // Port
     parts.port?.let { port ->
         Text(
-            text = ":$port",
+            text = "${context.getString(R.string.url_component_port_separator)}$port",
             color = colors.urlHost,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("port")
@@ -229,7 +237,7 @@ private fun renderInlineUrlComponents(
     // Query parameters
     if (tokens.isNotEmpty()) {
         Text(
-            text = "?",
+            text = context.getString(R.string.url_component_query_start),
             color = colors.urlQuery,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("query-start")
@@ -238,7 +246,7 @@ private fun renderInlineUrlComponents(
         tokens.forEachIndexed { idx, tok ->
             if (idx > 0) {
                 Text(
-                    text = "&",
+                    text = context.getString(R.string.url_component_query_separator),
                     color = colors.urlQuery,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.testTag("query-separator-$idx")
@@ -272,25 +280,17 @@ private fun renderInlineUrlComponents(
                 else -> colors.urlQuery
             }
             
-            // Parameter key
-            val keyText = if (shouldMask) {
-                BlurStateCalculator.generateMask(tok.decodedKey)
-            } else {
-                tok.decodedKey
-            }
-            
+            // Parameter key - NEVER mask parameter names, only values
             Text(
-                text = keyText,
+                text = tok.decodedKey,
                 color = keyColor,
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier
-                    .testTag("param-key-$idx")
-                    .then(if (shouldMask) Modifier.blur(4.dp) else Modifier)
+                modifier = Modifier.testTag("param-key-$idx")
             )
             
             if (tok.hasEquals) {
                 Text(
-                    text = "=",
+                    text = context.getString(R.string.url_component_param_equals),
                     color = colors.urlQuery,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.testTag("param-equals-$idx")
@@ -318,7 +318,7 @@ private fun renderInlineUrlComponents(
     // Fragment
     parts.fragment?.let { fragment ->
         Text(
-            text = "#",
+            text = context.getString(R.string.url_component_fragment_start),
             color = colors.urlFragment,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag("fragment-start")

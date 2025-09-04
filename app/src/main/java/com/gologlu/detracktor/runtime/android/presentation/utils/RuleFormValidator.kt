@@ -1,5 +1,7 @@
 package com.gologlu.detracktor.runtime.android.presentation.utils
 
+import android.content.Context
+import com.gologlu.detracktor.R
 import com.gologlu.detracktor.application.service.globby.Globby
 import com.gologlu.detracktor.runtime.android.presentation.types.RuleEditFormData
 import com.gologlu.detracktor.runtime.android.presentation.types.RuleValidationResult
@@ -13,7 +15,7 @@ class RuleFormValidator {
     /**
      * Validate complete form data
      */
-    fun validateComplete(formData: RuleEditFormData): RuleValidationResult {
+    fun validateComplete(formData: RuleEditFormData, androidContext: Context? = null): RuleValidationResult {
         val errors = mutableListOf<String>()
         val warnings = mutableListOf<String>()
         
@@ -21,7 +23,7 @@ class RuleFormValidator {
         errors.addAll(validateDomains(formData.domainsInput))
         
         // Validate subdomain mode and subdomains
-        errors.addAll(validateSubdomainMode(formData.subdomainMode, formData.subdomainsInput))
+        errors.addAll(validateSubdomainMode(formData.subdomainMode, formData.subdomainsInput, androidContext))
         
         // Validate remove patterns
         errors.addAll(validateRemovePatterns(formData.removePatternsInput))
@@ -71,7 +73,7 @@ class RuleFormValidator {
     /**
      * Validate subdomain mode and subdomains input
      */
-    fun validateSubdomainMode(subdomainMode: SubdomainMode, subdomainsInput: String): List<String> {
+    fun validateSubdomainMode(subdomainMode: SubdomainMode, subdomainsInput: String, androidContext: Context? = null): List<String> {
         val errors = mutableListOf<String>()
         
         when (subdomainMode) {
@@ -86,11 +88,20 @@ class RuleFormValidator {
                     errors.add("Specific subdomains are required")
                 } else {
                     val subdomains = parseCommaSeparatedList(subdomainsInput)
+                    val context = androidContext // Capture context for lambda
                     subdomains.forEach { subdomain ->
                         if (subdomain.contains('.')) {
-                            errors.add("Subdomain should not contain dots: $subdomain")
+                            val message = when (context) {
+                                null -> "Subdomain should not contain dots: $subdomain"
+                                else -> context.getString(R.string.validation_subdomain_contains_dots, subdomain)
+                            }
+                            errors.add(message)
                         } else if (!isValidSubdomainName(subdomain)) {
-                            errors.add("Invalid subdomain name: $subdomain")
+                            val message = when (context) {
+                                null -> "Invalid subdomain name: $subdomain"
+                                else -> context.getString(R.string.validation_invalid_subdomain_name, subdomain)
+                            }
+                            errors.add(message)
                         }
                     }
                 }

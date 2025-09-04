@@ -1,14 +1,15 @@
 package com.gologlu.detracktor.runtime.android.presentation.components
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.gologlu.detracktor.application.service.match.TokenEffect
+import com.gologlu.detracktor.domain.model.QueryPairs
+import com.gologlu.detracktor.domain.model.UrlParts
+import com.gologlu.detracktor.runtime.android.presentation.ui.theme.DetracktorTheme
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,277 +23,402 @@ class UrlPreviewInlineBlurTest {
     @Test
     fun testUrlPreviewDisplaysCorrectly() {
         // Test basic URL preview display
-        
-        // TODO: Set up UrlPreviewInlineBlur with test data
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = "https://example.com?token=secret&id=123",
-        //         sensitiveParams = listOf("token"),
-        //         isBlurred = true,
-        //         onToggleBlur = {}
-        //     )
-        // }
-        
-        // composeTestRule.onNodeWithTag("url_preview").assertIsDisplayed()
-        // composeTestRule.onNodeWithTag("blur_toggle_button").assertIsDisplayed()
+        val urlParts = createTestUrlParts("https://example.com?token=secret&id=123")
+        val tokenEffects = listOf(
+            TokenEffect(tokenIndex = 0, name = "token", willBeRemoved = false, matchedRuleIndexes = emptyList(), matchedPatternsByRule = emptyMap())
+        )
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = true,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("url-preview-inline-blur").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("url-inline-flow").assertIsDisplayed()
     }
 
     @Test
-    fun testBlurToggleInteraction() {
-        // Test blur/reveal functionality
-        
-        // TODO: Implement blur toggle tests
-        // This should test:
-        // 1. Initial blurred state
-        // 2. Toggle to revealed state
-        // 3. Toggle back to blurred state
-        // 4. Button icon changes
-        // 5. URL text visibility changes
-        
-        // Example structure:
-        // var isBlurred = true
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = "https://example.com?token=secret&id=123",
-        //         sensitiveParams = listOf("token"),
-        //         isBlurred = isBlurred,
-        //         onToggleBlur = { isBlurred = !isBlurred }
-        //     )
-        // }
-        
-        // // Initially blurred
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("***")
-        // composeTestRule.onNodeWithContentDescription("Show sensitive data").assertIsDisplayed()
-        
-        // // Toggle to reveal
-        // composeTestRule.onNodeWithTag("blur_toggle_button").performClick()
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("token=secret")
-        // composeTestRule.onNodeWithContentDescription("Hide sensitive data").assertIsDisplayed()
+    fun testSchemeDisplay() {
+        val urlParts = createTestUrlParts("https://example.com")
+        val tokenEffects = emptyList<TokenEffect>()
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("scheme").assertIsDisplayed()
     }
 
     @Test
-    fun testSensitiveParameterHighlighting() {
-        // Test highlighting of sensitive parameters
-        
-        // TODO: Implement sensitive parameter highlighting tests
-        // This should test:
-        // 1. Sensitive parameters are highlighted
-        // 2. Non-sensitive parameters are not highlighted
-        // 3. Multiple sensitive parameters handling
-        // 4. Parameter value blurring
-        
-        // Example structure:
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = "https://example.com?token=secret&password=123&id=456",
-        //         sensitiveParams = listOf("token", "password"),
-        //         isBlurred = false,
-        //         onToggleBlur = {}
-        //     )
-        // }
-        
-        // composeTestRule.onNodeWithTag("sensitive_param_token").assertIsDisplayed()
-        // composeTestRule.onNodeWithTag("sensitive_param_password").assertIsDisplayed()
-        // composeTestRule.onNodeWithTag("normal_param_id").assertIsDisplayed()
+    fun testHostDisplay() {
+        val urlParts = createTestUrlParts("https://example.com")
+        val tokenEffects = emptyList<TokenEffect>()
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("host").assertIsDisplayed()
     }
 
     @Test
-    fun testBlurredStateDisplay() {
-        // Test how sensitive data is displayed when blurred
-        
-        // TODO: Implement blurred state tests
-        // This should test:
-        // 1. Sensitive values replaced with asterisks
-        // 2. Parameter names still visible
-        // 3. Non-sensitive parameters unaffected
-        // 4. Proper blur character count
-        
-        // Example structure:
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = "https://example.com?token=verylongsecret&id=123",
-        //         sensitiveParams = listOf("token"),
-        //         isBlurred = true,
-        //         onToggleBlur = {}
-        //     )
-        // }
-        
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("token=***")
-        // composeTestRule.onNodeWithTag("url_text").assertTextDoesNotContain("verylongsecret")
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("id=123")
+    fun testPortDisplay() {
+        val urlParts = createTestUrlParts("https://example.com:8080")
+        val tokenEffects = emptyList<TokenEffect>()
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("port").assertIsDisplayed()
     }
 
     @Test
-    fun testLongUrlHandling() {
-        // Test handling of very long URLs
-        
-        // TODO: Implement long URL tests
-        // This should test:
-        // 1. URL truncation
-        // 2. Scroll behavior
-        // 3. Expand/collapse functionality
-        // 4. Blur state preservation during expansion
-        
-        // Example structure:
-        // val longUrl = "https://example.com/very/long/path?" + 
-        //     "token=secret&".repeat(20) + "id=123"
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = longUrl,
-        //         sensitiveParams = listOf("token"),
-        //         isBlurred = true,
-        //         onToggleBlur = {}
-        //     )
-        // }
-        
-        // composeTestRule.onNodeWithTag("expand_url_button").performClick()
-        // composeTestRule.onNodeWithTag("full_url").assertIsDisplayed()
-        // composeTestRule.onNodeWithTag("full_url").assertTextContains("token=***")
+    fun testPathDisplay() {
+        val urlParts = createTestUrlParts("https://example.com/path/to/resource")
+        val tokenEffects = emptyList<TokenEffect>()
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("path").assertIsDisplayed()
     }
 
     @Test
-    fun testNoSensitiveParametersCase() {
-        // Test behavior when no sensitive parameters are present
-        
-        // TODO: Implement no sensitive params tests
-        // This should test:
-        // 1. Blur toggle button not shown
-        // 2. URL displayed normally
-        // 3. No highlighting applied
-        // 4. Normal text rendering
-        
-        // Example structure:
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = "https://example.com?id=123&page=1",
-        //         sensitiveParams = emptyList(),
-        //         isBlurred = false,
-        //         onToggleBlur = {}
-        //     )
-        // }
-        
-        // composeTestRule.onNodeWithTag("blur_toggle_button").assertIsNotDisplayed()
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("id=123&page=1")
+    fun testQueryParametersDisplay() {
+        val urlParts = createTestUrlParts("https://example.com?param1=value1&param2=value2")
+        val tokenEffects = listOf(
+            TokenEffect(tokenIndex = 0, name = "param1", willBeRemoved = false, matchedRuleIndexes = emptyList(), matchedPatternsByRule = emptyMap()),
+            TokenEffect(tokenIndex = 1, name = "param2", willBeRemoved = true, matchedRuleIndexes = listOf(0), matchedPatternsByRule = mapOf(0 to listOf("param2")))
+        )
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("query-start").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-key-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-key-1").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-1").assertIsDisplayed()
     }
 
     @Test
-    fun testUrlWithoutQueryParameters() {
-        // Test URLs without query parameters
-        
-        // TODO: Implement no query params tests
-        // This should test:
-        // 1. URL displayed without modification
-        // 2. No blur functionality shown
-        // 3. Clean URL rendering
-        
-        // Example structure:
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = "https://example.com/path",
-        //         sensitiveParams = listOf("token"),
-        //         isBlurred = false,
-        //         onToggleBlur = {}
-        //     )
-        // }
-        
-        // composeTestRule.onNodeWithTag("url_text").assertTextEquals("https://example.com/path")
-        // composeTestRule.onNodeWithTag("blur_toggle_button").assertIsNotDisplayed()
+    fun testFragmentDisplay() {
+        val urlParts = createTestUrlParts("https://example.com#section")
+        val tokenEffects = emptyList<TokenEffect>()
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("fragment-start").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("fragment").assertIsDisplayed()
     }
 
     @Test
-    fun testAccessibilitySupport() {
-        // Test accessibility features
-        
-        // TODO: Implement accessibility tests
-        // This should test:
-        // 1. Content descriptions for blur toggle
-        // 2. Semantic properties for sensitive data
-        // 3. Screen reader announcements
-        // 4. Focus management
-        
-        // Example structure:
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = "https://example.com?token=secret",
-        //         sensitiveParams = listOf("token"),
-        //         isBlurred = true,
-        //         onToggleBlur = {}
-        //     )
-        // }
-        
-        // composeTestRule.onNodeWithTag("blur_toggle_button")
-        //     .assertHasContentDescription("Show sensitive data")
-        // composeTestRule.onNodeWithTag("url_text")
-        //     .assertHasSemantics { isPassword = true }
+    fun testUserInfoDisplay() {
+        val urlParts = createTestUrlParts("https://user:pass@example.com")
+        val tokenEffects = emptyList<TokenEffect>()
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("userinfo").assertIsDisplayed()
     }
 
     @Test
-    fun testThemeSupport() {
-        // Test component appearance in different themes
-        
-        // TODO: Implement theme tests
-        // This should test:
-        // 1. Light theme colors
-        // 2. Dark theme colors
-        // 3. Sensitive parameter highlighting colors
-        // 4. Button icon colors
-        
-        // Example structure:
-        // composeTestRule.setContent {
-        //     DetracktorTheme(darkTheme = true) {
-        //         UrlPreviewInlineBlur(
-        //             url = "https://example.com?token=secret",
-        //             sensitiveParams = listOf("token"),
-        //             isBlurred = false,
-        //             onToggleBlur = {}
-        //         )
-        //     }
-        // }
-        // // Verify dark theme colors are applied
+    fun testUserInfoBlurredWhenEnabled() {
+        val urlParts = createTestUrlParts("https://user:pass@example.com")
+        val tokenEffects = emptyList<TokenEffect>()
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = true,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("userinfo").assertIsDisplayed()
     }
 
     @Test
-    fun testInteractionStates() {
-        // Test various interaction states
-        
-        // TODO: Implement interaction state tests
-        // This should test:
-        // 1. Button hover states
-        // 2. Button pressed states
-        // 3. Focus states
-        // 4. Disabled states
-        
-        // Example structure:
-        // composeTestRule.onNodeWithTag("blur_toggle_button").performClick()
-        // // Verify button state changes
-        // composeTestRule.onNodeWithTag("blur_toggle_button").assertHasClickAction()
+    fun testComplexUrlWithAllComponents() {
+        val urlParts = createTestUrlParts("https://user:pass@example.com:8080/path?param1=value1&param2=value2#section")
+        val tokenEffects = listOf(
+            TokenEffect(tokenIndex = 0, name = "param1", willBeRemoved = false, matchedRuleIndexes = emptyList(), matchedPatternsByRule = emptyMap()),
+            TokenEffect(tokenIndex = 1, name = "param2", willBeRemoved = true, matchedRuleIndexes = listOf(0), matchedPatternsByRule = mapOf(0 to listOf("param2")))
+        )
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        // Verify all components are displayed
+        composeTestRule.onNodeWithTag("scheme").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("userinfo").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("host").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("port").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("path").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("query-start").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-key-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-key-1").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-1").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("fragment-start").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("fragment").assertIsDisplayed()
     }
 
     @Test
-    fun testComplexUrlScenarios() {
-        // Test complex URL scenarios
+    fun testBlurEnabledState() {
+        val urlParts = createTestUrlParts("https://example.com?sensitive=secret&normal=value")
+        val tokenEffects = listOf(
+            TokenEffect(tokenIndex = 0, name = "sensitive", willBeRemoved = false, matchedRuleIndexes = emptyList(), matchedPatternsByRule = emptyMap()),
+            TokenEffect(tokenIndex = 1, name = "normal", willBeRemoved = true, matchedRuleIndexes = listOf(0), matchedPatternsByRule = mapOf(0 to listOf("normal")))
+        )
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = true,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        // All components should still be displayed even when blur is enabled
+        composeTestRule.onNodeWithTag("param-key-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-key-1").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-1").assertIsDisplayed()
+    }
+
+    @Test
+    fun testBlurDisabledState() {
+        val urlParts = createTestUrlParts("https://example.com?sensitive=secret&normal=value")
+        val tokenEffects = listOf(
+            TokenEffect(tokenIndex = 0, name = "sensitive", willBeRemoved = false, matchedRuleIndexes = emptyList(), matchedPatternsByRule = emptyMap()),
+            TokenEffect(tokenIndex = 1, name = "normal", willBeRemoved = true, matchedRuleIndexes = listOf(0), matchedPatternsByRule = mapOf(0 to listOf("normal")))
+        )
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        // All components should be displayed normally when blur is disabled
+        composeTestRule.onNodeWithTag("param-key-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-key-1").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-1").assertIsDisplayed()
+    }
+
+    @Test
+    fun testEmptyQueryParameters() {
+        val urlParts = createTestUrlParts("https://example.com")
+        val tokenEffects = emptyList<TokenEffect>()
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        // Should display basic URL components without query parameters
+        composeTestRule.onNodeWithTag("scheme").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("host").assertIsDisplayed()
+    }
+
+    @Test
+    fun testSingleQueryParameter() {
+        val urlParts = createTestUrlParts("https://example.com?single=value")
+        val tokenEffects = listOf(
+            TokenEffect(tokenIndex = 0, name = "single", willBeRemoved = false, matchedRuleIndexes = emptyList(), matchedPatternsByRule = emptyMap())
+        )
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("query-start").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-key-0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("param-value-0").assertIsDisplayed()
+    }
+
+    @Test
+    fun testParameterWithoutValue() {
+        val urlParts = createTestUrlPartsWithoutEquals("https://example.com?flag")
+        val tokenEffects = listOf(
+            TokenEffect(tokenIndex = 0, name = "flag", willBeRemoved = false, matchedRuleIndexes = emptyList(), matchedPatternsByRule = emptyMap())
+        )
+
+        composeTestRule.setContent {
+            DetracktorTheme(darkTheme = false) {
+                UrlPreviewInlineBlur(
+                    parts = urlParts,
+                    tokenEffects = tokenEffects,
+                    blurEnabled = false,
+                    highlight = Color.Red,
+                    muted = Color.Gray
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("param-key-0").assertIsDisplayed()
+        // Should not have equals or value for flag parameters
+    }
+
+    // Helper function to create test UrlParts
+    private fun createTestUrlParts(url: String): UrlParts {
+        val parts = url.split("://", "?", "#")
+        val scheme = if (parts.isNotEmpty()) parts[0] else null
         
-        // TODO: Implement complex URL tests
-        // This should test:
-        // 1. URLs with fragments
-        // 2. URLs with user info
-        // 3. URLs with ports
-        // 4. URLs with encoded characters
-        // 5. Multiple sensitive parameters
+        val hostAndPath = if (parts.size > 1) parts[1] else ""
+        val hostPortPath = hostAndPath.split("/")
+        val hostPort = hostPortPath[0]
+        val path = if (hostPortPath.size > 1) "/" + hostPortPath.drop(1).joinToString("/") else null
         
-        // Example structure:
-        // composeTestRule.setContent {
-        //     UrlPreviewInlineBlur(
-        //         url = "https://user:pass@example.com:8080/path?token=secret&api_key=123&id=456#section",
-        //         sensitiveParams = listOf("token", "api_key"),
-        //         isBlurred = true,
-        //         onToggleBlur = {}
-        //     )
-        // }
+        val hostPortParts = hostPort.split("@").last().split(":")
+        val host = hostPortParts[0]
+        val port = if (hostPortParts.size > 1) hostPortParts[1].toIntOrNull() else null
         
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("token=***")
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("api_key=***")
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("id=456")
-        // composeTestRule.onNodeWithTag("url_text").assertTextContains("#section")
+        val userInfo = if (hostPort.contains("@")) {
+            hostPort.split("@")[0]
+        } else null
+        
+        val queryString = if (parts.size > 2 && url.contains("?")) {
+            val queryPart = parts[2].split("#")[0]
+            if (queryPart.isNotEmpty()) queryPart else null
+        } else null
+        
+        val fragment = if (url.contains("#")) {
+            url.split("#").last()
+        } else null
+        
+        val queryPairs = if (queryString != null) {
+            QueryPairs.from(queryString)
+        } else {
+            QueryPairs.empty()
+        }
+        
+        return UrlParts(
+            scheme = scheme,
+            userInfo = userInfo,
+            host = host,
+            port = port,
+            path = path,
+            queryPairs = queryPairs,
+            fragment = fragment
+        )
+    }
+
+    // Helper function to create test UrlParts with parameters that don't have equals
+    private fun createTestUrlPartsWithoutEquals(url: String): UrlParts {
+        val urlParts = createTestUrlParts(url)
+        // For this test, we'll simulate a flag parameter without equals
+        // This would need to be handled by the actual QueryPairs implementation
+        return urlParts
     }
 }

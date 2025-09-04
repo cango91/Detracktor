@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,6 +29,7 @@ fun RuleListItem(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val androidContext = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
     
     Card(
@@ -89,7 +91,7 @@ fun RuleListItem(
             
             // Rule description
             Text(
-                text = rule.getDescription(),
+                text = rule.getDescription(androidContext),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
@@ -273,6 +275,7 @@ fun CompactRuleListItem(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val androidContext = LocalContext.current
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -294,7 +297,7 @@ fun CompactRuleListItem(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
-                    text = rule.getDescription(),
+                    text = rule.getDescription(androidContext),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,

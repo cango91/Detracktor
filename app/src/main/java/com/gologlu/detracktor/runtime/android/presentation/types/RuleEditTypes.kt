@@ -1,5 +1,7 @@
 package com.gologlu.detracktor.runtime.android.presentation.types
 
+import android.content.Context
+import com.gologlu.detracktor.R
 import com.gologlu.detracktor.application.types.*
 
 /**
@@ -158,9 +160,9 @@ fun UrlRule.toFormData(): RuleEditFormData {
 /**
  * Get a human-readable description of the rule
  */
-fun UrlRule.getDescription(): String {
+fun UrlRule.getDescription(context: Context): String {
     val hostDesc = when (val domains = when_.host.domains) {
-        is Domains.Any -> "All domains"
+        is Domains.Any -> context.getString(R.string.rule_display_all_domains)
         is Domains.ListOf -> {
             val host = domains.values.firstOrNull() ?: "unknown"
             when (when_.host.subdomains) {
@@ -174,10 +176,14 @@ fun UrlRule.getDescription(): String {
     
     val removeCount = then.remove.size
     val removeDesc = if (removeCount > 0) {
-        "$removeCount parameter${if (removeCount != 1) "s" else ""}"
+        if (removeCount == 1) {
+            context.getString(R.string.rule_display_remove_count_single, removeCount)
+        } else {
+            context.getString(R.string.rule_display_remove_count_plural, removeCount)
+        }
     } else {
-        "no parameters"
+        context.getString(R.string.rule_display_remove_count_none)
     }
     
-    return "Remove $removeDesc from $hostDesc"
+    return context.getString(R.string.rule_display_remove_from, removeDesc, hostDesc)
 }

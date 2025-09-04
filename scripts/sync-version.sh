@@ -33,42 +33,58 @@ PRE_RELEASE_SUFFIX=${BASH_REMATCH[5]} # Captures the whole pre-release part (e.g
 # Leave room for pre-release identifiers.
 VERSION_CODE=$((MAJOR * 10000000 + MINOR * 100000 + PATCH * 1000))
 
+# Compatibility offset to handle already published versions
+# This ensures new versions are higher than the faulty v1.1.0-alpha.1 = 10100989
+COMPATIBILITY_OFFSET=2000
+
 # Handle pre-release suffixes for version code
 # Android's versionCode must be a monotonically increasing integer.
-# To ensure pre-release versions are lower than the final release,
-# we need to assign a negative offset.
+# Strategy: Use negative offsets from base to ensure stable > rc > beta > alpha > unknown
+# while maintaining proper ordering within each type.
 if [[ -n "$PRE_RELEASE_SUFFIX" ]]; then
-    # Standardize common pre-release labels and assign them an ordinal value
-    # Pre-release versions should sort lower than the main release.
-    # Example precedence: 1.2.3-alpha < 1.2.3-beta < 1.2.3-rc < 1.2.3
+    # Standardize common pre-release labels and assign them priority values
+    # Higher priority = higher version code (closer to stable release)
     case "${PRE_RELEASE_SUFFIX%%.*}" in
         "alpha")
-            PRE_RELEASE_INDEX=1
+            PRE_RELEASE_PRIORITY=1
             ;;
         "beta")
-            PRE_RELEASE_INDEX=2
+            PRE_RELEASE_PRIORITY=2
             ;;
         "rc")
-            PRE_RELEASE_INDEX=3
+            PRE_RELEASE_PRIORITY=3
             ;;
         *)
-            # For other pre-release types, use a high index to keep them sorted
-            PRE_RELEASE_INDEX=99
+            # For other pre-release types, use lowest priority
+            PRE_RELEASE_PRIORITY=0
             ;;
     esac
 
     # Extract the pre-release number (e.g., '1' from 'alpha.1')
     PRE_RELEASE_NUMBER=$(echo "$PRE_RELEASE_SUFFIX" | grep -o '[0-9]*$')
-    # If no number is found, assume 0
+    # If no number is found, assume 1
     if [[ -z "$PRE_RELEASE_NUMBER" ]]; then
-        PRE_RELEASE_NUMBER=0
+        PRE_RELEASE_NUMBER=1
+    fi
+    # Cap at 99 to prevent overflow
+    if [[ $PRE_RELEASE_NUMBER -gt 99 ]]; then
+        PRE_RELEASE_NUMBER=99
     fi
 
-    # Calculate pre-release offset. Higher numbers indicate a later release.
-    # The offset is subtracted from the final version code.
-    # We use a negative offset to make pre-releases lower than stable releases.
-    PRE_RELEASE_OFFSET=$((1000 - (PRE_RELEASE_INDEX * 10) - PRE_RELEASE_NUMBER))
-    VERSION_CODE=$((VERSION_CODE + PRE_RELEASE_OFFSET))
+    # Calculate pre-release offset using the formula:
+    # Base - (1000 - PRIORITY * 100 - NUMBER) + COMPATIBILITY_OFFSET
+    # This ensures: stable > rc > beta > alpha > unknown
+    # and within each type: higher numbers get higher codes
+    PRE_RELEASE_OFFSET=$((1000 - (PRE_RELEASE_PRIORITY * 100) - PRE_RELEASE_NUMBER))
+    VERSION_CODE=$((VERSION_CODE - PRE_RELEASE_OFFSET + COMPATIBILITY_OFFSET))
+else
+    # Stable release: add compatibility offset and ensure it ends in 0
+    VERSION_CODE=$((VERSION_CODE + COMPATIBILITY_OFFSET))
+    # Ensure stable releases end in 0 (industry standard)
+    LAST_DIGIT=$((VERSION_CODE % 10))
+    if [[ $LAST_DIGIT -ne 0 ]]; then
+        VERSION_CODE=$((VERSION_CODE + (10 - LAST_DIGIT)))
+    fi
 fi
 
 echo "Updating version.properties:"

@@ -8,6 +8,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.printToLog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gologlu.detracktor.runtime.android.presentation.types.AfterCleaningAction
@@ -41,13 +43,15 @@ class ConfigScreenTest {
 
         // Wait for composition to complete
         composeTestRule.waitForIdle()
-        Thread.sleep(1000) // Add delay for CI stability
 
         // Then
         composeTestRule.onNodeWithTag("config-screen").assertIsDisplayed()
         composeTestRule.onNodeWithTag("settings-section-theme").assertIsDisplayed()
         composeTestRule.onNodeWithTag("settings-section-after-cleaning-urls").assertIsDisplayed()
         composeTestRule.onNodeWithTag("settings-section-share-warnings").assertIsDisplayed()
+        // Scroll to ensure the last section is brought into view on smaller screens/SDK29
+        composeTestRule.onNodeWithTag("config-screen")
+            .performScrollToNode(hasTestTag("settings-section-rule-management"))
         composeTestRule.onNodeWithTag("settings-section-rule-management").assertIsDisplayed()
     }
 
@@ -336,6 +340,9 @@ class ConfigScreenTest {
         composeTestRule.waitForIdle()
 
         // Then
+        // Ensure the section is visible before assertions on smaller screens/SDK29
+        composeTestRule.onNodeWithTag("config-screen")
+            .performScrollToNode(hasTestTag("settings-section-rule-management"))
         composeTestRule.onNodeWithText("Rule Management").assertIsDisplayed()
         composeTestRule.onNodeWithText("Configure URL cleaning rules and patterns").assertIsDisplayed()
         composeTestRule.onNodeWithTag("rule-edit-button").assertIsDisplayed()
@@ -363,6 +370,9 @@ class ConfigScreenTest {
         composeTestRule.waitForIdle()
 
         // Click the rule edit button
+        // Bring the button into view first for SDK29
+        composeTestRule.onNodeWithTag("config-screen")
+            .performScrollToNode(hasTestTag("rule-edit-button"))
         composeTestRule.onNodeWithTag("rule-edit-button").performClick()
 
         // Then
@@ -532,6 +542,9 @@ class ConfigScreenTest {
         composeTestRule.onNodeWithText("Theme").assertIsDisplayed()
         composeTestRule.onNodeWithText("After Cleaning URLs").assertIsDisplayed()
         composeTestRule.onNodeWithText("Share Warnings").assertIsDisplayed()
+        // Ensure last section title is visible on smaller screens/SDK29
+        composeTestRule.onNodeWithTag("config-screen")
+            .performScrollToNode(hasTestTag("settings-section-rule-management"))
         composeTestRule.onNodeWithText("Rule Management").assertIsDisplayed()
     }
 }

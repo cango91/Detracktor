@@ -48,7 +48,7 @@ org-jacoco-core = { module = "org.jacoco:org.jacoco.core", version.ref = "orgJac
 robolectric = { group = "org.robolectric", name = "robolectric", version = "4.16" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidx-test-core" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
-mockk-android = { group = "io.mockk", name = "mockk-android", version = "1.14.5" }
+mockk-android = { group = "io.mockk", name = "mockk-android", version = "1.14.6" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
 androidx-test-ext-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "androidx-test-ext-junit" }
 
